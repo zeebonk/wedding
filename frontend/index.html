@@ -25,7 +25,7 @@
 		    <div class="form-row">
 			<div class="col-12">
 			    <label>Enter your access code</label>
-			    <input name="code" type="text" class="form-control">
+			    <input name="code" type="number" autocomplete="off" class="form-control">
 			    <div class="invalid-feedback">
 				Code invalid, did you enter it correctly?
 			    </div>
@@ -60,7 +60,7 @@
 
 		showPage("auth");
 
-	    	var ws = new WebSocket("ws://192.168.2.10:8000");
+	    	var ws = new WebSocket("ws://localhost:8000");
 
                 document.querySelector("#auth form").onsubmit = function() {
 		    var code = parseInt(document.querySelector("input[name=code]").value);
