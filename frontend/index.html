@@ -1,5 +1,103 @@
-<html>
+<!doctype html>
+<html lang="en">
+    <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link href="https://bootswatch.com/4/darkly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.css" integrity="sha256-46qynGAkLSFpVbEBog43gvNhfrOj+BmwXdxFgVK/Kvc=" crossorigin="anonymous" />
+	<style>
+	    body { text-align: center; }
+	    h1 {
+	        text-align: center;
+		margin-top: 1em;
+		margin-bottom: 1em;
+                font-size: 5em;
+	    }
+            button[name=submit] { margin-top: 2em; }
+	</style>
+    </head>
     <body>
-        <h1>Hello world!</h1>
+	<div class="container">
+	<div class="page row" id="auth">
+	    <div class="col-12">
+                <h1><i class="fas fa-user-secret"></i></h1>
+		<form>
+		    <div class="form-row">
+			<div class="col-12">
+			    <label>Enter your access code</label>
+			    <input name="code" type="text" class="form-control">
+			    <div class="invalid-feedback">
+				Code invalid, did you enter it correctly?
+			    </div>
+			</div>
+		    </div>
+		    <button type="submit" class="btn btn-primary" name="submit">Authenticate</button><br>
+		</form>
+	    </div>
+	</div>
+	<div class="page row" id="lobby">
+	    <h1><i class="fas fa-compass fa-spin"></i></h1>
+	    <p>Please await further instructions...<p>
+            <p><span>0</span> people in the lobby</p>
+	</div>
+	<div class="page row" id="countdown">
+            <h1><i class="fas fa-exclamation-triangle"></i></h1>
+            <h1 class="count">5</h1>
+	</div>
+	<div class="page row" id="color-code">
+	    <img>
+	</div>
+	</div>
+	<script type="text/javascript">
+	    (function() {
+                function showPage(page) {
+		    var pages = document.querySelectorAll(".page");
+		    for (var i = 0; i < pages.length; i++) {
+			pages[i].style.display = "none";
+		    }
+		    document.querySelector("#" + page).style.display = "block";
+		};
+
+		showPage("auth");
+
+	    	var ws = new WebSocket("ws://192.168.2.10:8000");
+
+                document.querySelector("#auth form").onsubmit = function() {
+		    var code = parseInt(document.querySelector("input[name=code]").value);
+                    ws.send(JSON.stringify({"type": "sign-in", "code": code}));
+		    return false;
+		};
+
+		ws.onmessage = function(event) {
+                    console.log(event)
+		    var data = JSON.parse(event.data);
+		    console.log(data);
+		    var type = data["type"];
+		    if (type == "signed-in") {
+			document.querySelector("#color-code img").src = data["image"];
+			showPage("lobby");
+		    }
+		    else if (type == "invalid-code") {
+			document.querySelector("#auth .invalid-feedback").style.display = "block";
+			showPage("auth");
+                    }
+		    else if (type == "countdown") {
+			var count = data["count"];
+			showPage("countdown");
+			document.querySelector("#countdown .count").innerText = count;
+                        window.navigator.vibrate(200);
+		    }
+		    else if (type == "show-image") {
+			showPage("color-code");
+                    }
+                    else if (type == "lobby-count") {
+                        document.querySelector("#lobby p span").innerText = data["count"];
+                    }
+                    else if (type == "reset") {
+                        window.location = "";
+                    }
+		};
+            })()
+	</script>
     </body>
 </html>
