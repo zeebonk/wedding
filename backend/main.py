@@ -1,97 +1,88 @@
-#!/usr/bin/env python
-
-import json
-import contextlib
-
 import asyncio
+import dataclasses
+import logging
+import typing
+
 import asyncpg
+import coolname
 import websockets
 
+import messages
+import stages
 
-conn = None
-done = False
-sockets = set()
-lobby = set()
 
-class Server():
+logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass(unsafe_hash=True)
+class User:
+    name: str
+    socket: typing.Any = dataclasses.field(compare=False, repr=False)
+    image: str = dataclasses.field(default=None, compare=False, repr=False)
+
+
+class Server:
     def __init__(self):
-        self.conn = None
-        self.done = False
-        self.sockets = set()
-        self.lobby = set()
+        self.pg_conn = None
+        self.stage = stages.WaitingInLobby(self, [])
+
+    async def set_stage(self, stage_class):
+        logger.info(
+            "Switching from %s to %s",
+            self.stage.__class__.__name__,
+            stage_class.__name__,
+        )
+        self.stage = stage_class(self, self.stage.users)
+        await self.stage.start()
 
     async def setup(self):
-        self.conn = await asyncpg.connect(user='postgres', password='postgres', database='postgres', host='postgres')
+        self.pg_conn = await asyncpg.connect(
+            user="postgres", password="postgres", database="postgres", host="postgres"
+        )
 
-    async def serve(self, websocket, path):
-        print('New connection')
-        self.sockets.add(websocket)
+    async def serve(self, socket, path):
+        user = User(coolname.generate_slug(2), socket)
+        logger.info("%s connected", user)
 
         while True:
             try:
-                msg = await websocket.recv()
-            except websockets.exceptions.ConnectionClosedOK:
-                self.sockets.discard(websocket)
-                self.lobby.discard(websocket)
-                self.send_lobby({"type": "lobby-count", "count": len(lobby)})
+                data = await user.socket.recv()
+            except (
+                websockets.exceptions.ConnectionClosedError,
+                websockets.exceptions.ConnectionClosedOK,
+            ) as e:
+                logger.info("%s closed connection (%s)", user, e)
+                await self.stage.on_disconnect(user)
                 break
 
-            print(msg)
+            message = messages.deserialize(data)
+            logger.info("Received %s from %s", message, user)
 
-            with contextlib.suppress(json.decoder.JSONDecodeError):
-                data = json.loads(msg)
-
-            if data['type'] == 'sign-in':
-                code = data['code']
-                if code == 9999:
-                    print('start-code')
-                    asyncio.create_task(self.count_down())
-                    continue
-                elif code == 9998:
-                    print('restart-code')
-                    self.send_sockets({"type": "reset"})
-                    self.done = False
-                    continue
-
-                image = await self.conn.fetchval('SELECT src FROM public."Image" WHERE code = $1;', code)
-                if image is None:
-                    await self.send(websocket, {"type": "invalid-code"})
-                else:
-                    await self.send(websocket, {"type": "signed-in", "image": image})
-                    self.lobby.add(websocket)
-                    self.send_lobby({"type": "lobby-count", "count": len(self.lobby)})
-                    if self.done:
-                        await self.send(websocket, {"type": "show-image"})
+            if isinstance(message, messages.AuthCode):
+                await self.stage.on_auth_code(user, message)
+            elif isinstance(message, messages.CountCode):
+                await self.stage.on_count_code(user, message)
             else:
-                print('invalid type')
+                raise NotImplementedError(f"Unsupported message {message}")
 
-    async def count_down(self):
-        for i in range(5, 0, -1):
-            self.send_lobby({"type": "countdown", "count": i})
-            await asyncio.sleep(1)
-        self.send_lobby({"type": "show-image"})
-        self.done = True
+    async def send(self, user, message):
+        await self.send_many(message, [user])
 
-    def send_lobby(self, msg):
-        self._send_all(msg, self.lobby)
-
-    def send_sockets(self, msg):
-        self._send_all(msg, self.sockets)
-
-    async def send(self, socket, msg):
-        await socket.send(json.dumps(msg))
-
-    def _send_all(self, msg, sockets):
-        msg = json.dumps(msg)
-        asyncio.gather(*[
-            socket.send(msg)
-            for socket in sockets
-            if socket.open
-        ])
+    async def send_many(self, message, users):
+        sockets = [u.socket for u in users if u.socket.open]
+        logger.info(
+            "Sending %s to %s", message, ", ".join(str(u) for u in users) or "Nobody"
+        )
+        if sockets:
+            data = messages.serialize(message)
+            await asyncio.gather(*(s.send(data) for s in sockets))
 
 
 def main():
-    print('Starting websocket server')
+    logging.basicConfig(level=logging.WARN)
+    logging.getLogger(__name__).level = logging.DEBUG
+
+    logger.info("Starting websocket server")
     server = Server()
     start_server = websockets.serve(server.serve, "0.0.0.0", 8000)
     asyncio.get_event_loop().run_until_complete(server.setup())
