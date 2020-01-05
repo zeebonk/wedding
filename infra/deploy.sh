@@ -1,0 +1,3 @@
+source .env
+terraform apply
+

@@ -1,3 +1,14 @@
+# OTHER
+
+infra/.terraform
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+infra/.env
+infra/wedding-kubeconfig.yaml
+infra/pg-certificate.crt
+
+# PYTHON
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
