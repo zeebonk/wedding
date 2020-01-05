@@ -23,18 +23,19 @@ class Stage:
         pass
 
     async def on_auth_code(self, user, message):
-        user.image = await self.server.pg_conn.fetchval(
-            'SELECT src FROM public."Image" WHERE code = $1;', message.code
+        code = await self.server.pg_conn.fetchval(
+            'SELECT code FROM public."Image" WHERE code = $1;', message.code
         )
 
         if message.code == 9999:
             await self.server.set_stage(WaitingInLobby)
             await self.server.send_many(messages.Reset(), self.users)
-        elif not user.image:
+        elif not code:
             await self.server.send(user, messages.AuthCodeInvalid())
             await self.on_auth_code_invalid(user, message)
         else:
-            await self.server.send(user, messages.AuthCodeOk(user.image, user.color_1))
+            user.color = random.choice(COLORS[:2])
+            await self.server.send(user, messages.AuthCodeOk(user.color))
             await self.on_auth_code_ok(user, message)
 
     async def on_auth_code_ok(self, user, message):
@@ -83,7 +84,8 @@ class CountingDown(Stage):
 
 class FindingGroup(Stage):
     def add_user_to_random_group(self, user):
-        color = random.choice(COLORS[:2])
+        # color = random.choice(COLORS[:2])
+        color = user.color
         self.groups[color].add(user)
 
     def get_group_name_and_group_by_user(self, user):

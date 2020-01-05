@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  websocket:
+  backend:
     build: backend
     volumes:
       - ./backend:/app
@@ -10,7 +10,10 @@ services:
     depends_on:
       - postgres
     environment:
-      PYTHONUNBUFFERED: 1
+      PG_USERNAME: postgres
+      PG_PASSWORD: postgres
+      PG_HOST: postgres
+      PG_PORT: 5432
 
   postgres:
     image: postgres:latest
@@ -28,11 +31,11 @@ services:
       PGADMIN_DEFAULT_PASSWORD: SuperSecret
 
   http:
-    build: backend
+    build: frontend
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
     ports:
-      - 8001:8001
+      - 8001:80
 
 volumes:
   pgdata:

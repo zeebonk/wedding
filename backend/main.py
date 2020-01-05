@@ -1,6 +1,8 @@
 import asyncio
 import dataclasses
 import logging
+import os
+import ssl
 import typing
 
 import asyncpg
@@ -36,9 +38,19 @@ class Server:
         await self.stage.start()
 
     async def setup(self):
-        self.pg_conn = await asyncpg.connect(
-            user="postgres", password="postgres", database="postgres", host="postgres"
+        params = dict(
+            user=os.getenv("PG_USERNAME"),
+            password=os.getenv("PG_PASSWORD"),
+            database=os.getenv("PG_DATABASE"),
+            host=os.getenv("PG_HOST"),
+            port=os.getenv("PG_PORT"),
         )
+
+        cadata = os.getenv("PG_CADATA")
+        if cadata:
+            params["ssl"] = ssl.create_default_context(cadata=cadata)
+
+        self.pg_conn = await asyncpg.connect(**params)
 
     async def serve(self, socket, path):
         user = User(coolname.generate_slug(2), socket)

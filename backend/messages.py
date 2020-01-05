@@ -57,8 +57,7 @@ class AuthCode(Message):
 @dataclass
 class AuthCodeOk(Message):
     type: ClassVar = "auth-code-ok"
-    image: str
-    color_1: str
+    color: str
 
 
 @dataclass
