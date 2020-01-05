@@ -28,12 +28,11 @@ services:
       PGADMIN_DEFAULT_PASSWORD: SuperSecret
 
   http:
-    image: python:3.8.0-buster
-    command: python -m http.server -d /app -b 0.0.0.0 8001
+    build: backend
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
     ports:
       - 8001:8001
-    volumes:
-      - ./frontend:/app
 
 volumes:
   pgdata:

@@ -99,7 +99,7 @@
 
 		showPage("auth-code");
 
-	    	var ws = new WebSocket("ws://localhost:8000");
+	    	var ws = new WebSocket("ws://ws.250120.gs");
 
                 $("#auth-code form").onsubmit = function() {
                     send(ws, {
@@ -124,7 +124,7 @@
 		    var type = data["type"];
 
 		    if (type == "auth-code-ok") {
-			$("#count-code").style.background = data["color_1"];
+			$("#count-code").style.background = data["color"];
 			showPage("lobby");
 		    }
 		    else if (type == "auth-code-invalid") {
