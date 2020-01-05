@@ -3,6 +3,7 @@ version: '3'
 services:
   backend:
     build: backend
+    image: zeebonk/wedding:backend
     volumes:
       - ./backend:/app
     ports:
@@ -30,8 +31,9 @@ services:
       PGADMIN_DEFAULT_EMAIL: user@domain.com
       PGADMIN_DEFAULT_PASSWORD: SuperSecret
 
-  http:
+  frontend:
     build: frontend
+    image: zeebonk/wedding:frontend
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
     ports:
