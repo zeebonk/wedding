@@ -99,7 +99,12 @@
 
 		showPage("auth-code");
 
-	    	var ws = new WebSocket("ws://ws.250120.gs");
+                var host = "ws://ws.250120.gs";
+                if (window.location.host.startsWith("localhost")) {
+                    host = "ws://localhost:8000";
+                }
+
+                var ws = new WebSocket(host);
 
                 $("#auth-code form").onsubmit = function() {
                     send(ws, {
