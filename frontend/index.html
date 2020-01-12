@@ -129,7 +129,6 @@
 		    var type = data["type"];
 
 		    if (type == "auth-code-ok") {
-			$("#count-code").style.background = data["color"];
 			showPage("lobby");
 		    }
 		    else if (type == "auth-code-invalid") {
@@ -146,6 +145,7 @@
                         window.navigator.vibrate(200);
 		    }
 		    else if (type == "show-count-code") {
+			$("#count-code").style.background = data["color"];
 			showPage("count-code");
                     }
                     else if (type == "count-code-ok") {

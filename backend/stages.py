@@ -34,8 +34,7 @@ class Stage:
             await self.server.send(user, messages.AuthCodeInvalid())
             await self.on_auth_code_invalid(user, message)
         else:
-            user.color = random.choice(COLORS[:2])
-            await self.server.send(user, messages.AuthCodeOk(user.color))
+            await self.server.send(user, messages.AuthCodeOk())
             await self.on_auth_code_ok(user, message)
 
     async def on_auth_code_ok(self, user, message):
@@ -84,8 +83,7 @@ class CountingDown(Stage):
 
 class FindingGroup(Stage):
     def add_user_to_random_group(self, user):
-        # color = random.choice(COLORS[:2])
-        color = user.color
+        color = random.choice(COLORS[:2])
         self.groups[color].add(user)
 
     def get_group_name_and_group_by_user(self, user):
@@ -99,7 +97,12 @@ class FindingGroup(Stage):
         self.done_groups = set()
         for user in self.users:
             self.add_user_to_random_group(user)
-        await self.server.send_many(messages.ShowCountCode(), self.users)
+
+        blas = []
+        for color, group in self.groups.items():
+            for user in group:
+                blas.append(self.server.send(user, messages.ShowCountCode(color=color)))
+        await asyncio.gather(*blas)
 
     async def on_auth_code_ok(self, user, message):
         self.users.add(user)

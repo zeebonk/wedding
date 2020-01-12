@@ -30,7 +30,7 @@ class AuthCodeInvalid(Message):
 @dataclass
 class ShowCountCode(Message):
     type: ClassVar = "show-count-code"
-
+    color: str
 
 @dataclass
 class CountCode(Message):
@@ -57,7 +57,6 @@ class AuthCode(Message):
 @dataclass
 class AuthCodeOk(Message):
     type: ClassVar = "auth-code-ok"
-    color: str
 
 
 @dataclass
