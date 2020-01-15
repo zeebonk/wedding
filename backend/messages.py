@@ -14,7 +14,15 @@ class Message:
 @dataclass
 class LobbyCount(Message):
     type: ClassVar = "lobby-count"
-    count: int
+    connected: int
+    done: int
+
+
+@dataclass
+class QuestionAnswers(Message):
+    type: ClassVar = "question-answers"
+    name: str
+    age: int
 
 
 @dataclass
@@ -31,6 +39,7 @@ class AuthCodeInvalid(Message):
 class ShowCountCode(Message):
     type: ClassVar = "show-count-code"
     color: str
+
 
 @dataclass
 class CountCode(Message):

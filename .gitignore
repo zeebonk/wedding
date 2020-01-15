@@ -1,6 +1,7 @@
 # OTHER
 
 tags
+frontend/node_modules
 
 infra/.terraform
 infra/terraform.tfstate

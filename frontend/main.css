@@ -1,0 +1,70 @@
+html,
+body,
+.container,
+.page {
+    height: 100%;
+}
+
+.container {
+    padding: 0 30px;
+}
+
+body {
+    text-align: center;
+}
+
+h1 {
+    text-align: center;
+    padding-top: 1em;
+    margin-bottom: 1em;
+    font-size: 5em;
+}
+
+button[name="submit"] {
+    margin-top: 3em;
+}
+
+input[type="number"],
+input[type="text"] {
+    text-align: center;
+    font-size: 2em;
+    font-family: monospace;
+}
+
+.form-row {
+    padding-bottom: 1em;
+}
+
+.intro {
+    margin-bottom: 4em;
+    text-align: justify;
+}
+
+.header-icon {
+    font-size: 7em;
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+    animation: pulse 2s alternate infinite ease-in-out;
+}
+
+.header-icon-rotate {
+    animation-name: rotate-pulse;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes rotate-pulse {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+    100% {
+        transform: scale(1.1) rotate(360deg);
+    }
+}

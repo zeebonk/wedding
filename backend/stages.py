@@ -28,7 +28,7 @@ class Stage:
         )
 
         if message.code == 9999:
-            await self.server.set_stage(WaitingInLobby)
+            await self.server.set_stage(TellAboutYourself)
             await self.server.send_many(messages.Reset(), self.users)
         elif not code:
             await self.server.send(user, messages.AuthCodeInvalid())
@@ -43,22 +43,47 @@ class Stage:
     async def on_auth_code_invalid(self, user, message):
         pass
 
+    async def on_question_answers(self, user, message):
+        user.age = message.age
+        user.name = message.name
+        await self.on_question_answered(user, message)
 
-class WaitingInLobby(Stage):
+    async def on_questions_answered(self, user, message):
+        pass
+
+
+class TellAboutYourself(Stage):
+    async def start(self):
+        self.users_to_answer = set(self.users)
+        self.users_answered = set()
+
     async def on_disconnect(self, user):
         self.users.discard(user)
+        self.users_to_answer.discard(user)
+        self.users_answered.discard(user)
         await self.send_lobby_count()
 
     async def on_auth_code_ok(self, user, message):
         self.users.add(user)
+        self.users_to_answer.add(user)
         await self.send_lobby_count()
 
     async def on_auth_code_invalid(self, user, message):
         if message.code == 9998:
             await self.server.set_stage(CountingDown)
 
+    async def on_question_answered(self, user, message):
+        self.users_to_answer.discard(user)
+        self.users_answered.add(user)
+        await self.send_lobby_count()
+
     async def send_lobby_count(self):
-        await self.server.send_many(messages.LobbyCount(len(self.users)), self.users)
+        await self.server.send_many(
+            messages.LobbyCount(
+                connected=len(self.users), done=len(self.users_answered),
+            ),
+            self.users_answered,
+        )
 
 
 class CountingDown(Stage):
@@ -69,7 +94,7 @@ class CountingDown(Stage):
     async def on_disconnect(self, user):
         self.users.discard(user)
 
-    async def on_auth_code_ok(self, user, message):
+    async def on_question_answered(self, user, message):
         self.users.add(user)
         await self.server.send(user, messages.Countdown(self.count))
 
@@ -85,6 +110,7 @@ class FindingGroup(Stage):
     def add_user_to_random_group(self, user):
         color = random.choice(COLORS[:2])
         self.groups[color].add(user)
+        return color
 
     def get_group_name_and_group_by_user(self, user):
         for group_name, group in self.groups.items():
@@ -104,10 +130,10 @@ class FindingGroup(Stage):
                 blas.append(self.server.send(user, messages.ShowCountCode(color=color)))
         await asyncio.gather(*blas)
 
-    async def on_auth_code_ok(self, user, message):
+    async def on_question_answered(self, user, message):
         self.users.add(user)
-        self.add_user_to_random_group(user)
-        await self.server.send(user, messages.ShowCountCode())
+        color = self.add_user_to_random_group(user)
+        await self.server.send(user, messages.ShowCountCode(color))
 
     async def on_count_code(self, user, message):
         group_name, group = self.get_group_name_and_group_by_user(user)
@@ -145,7 +171,7 @@ class Success(Stage):
     async def on_disconnect(self, user):
         self.users.discard(user)
 
-    async def on_auth_code_ok(self, user, message):
+    async def on_question_answered(self, user, message):
         self.users.add(user)
 
     async def go_to_next_stage(self):

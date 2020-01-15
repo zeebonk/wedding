@@ -35,7 +35,9 @@ services:
     build: frontend
     image: zeebonk/wedding:frontend
     volumes:
-      - ./frontend:/usr/share/nginx/html:ro
+      - ./frontend/index.html:/usr/share/nginx/html/index.html:ro
+      - ./frontend/main.css:/usr/share/nginx/html/main.css:ro
+      - ./frontend/main.js:/usr/share/nginx/html/main.js:ro
     ports:
       - 8001:80
 

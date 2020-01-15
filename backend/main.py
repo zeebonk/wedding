@@ -18,15 +18,17 @@ logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass(unsafe_hash=True)
 class User:
-    name: str
+    id: str
     socket: typing.Any = dataclasses.field(compare=False, repr=False)
-    image: str = dataclasses.field(default=None, compare=False, repr=False)
+
+    name: str = dataclasses.field(init=False, compare=False, repr=False)
+    age: int = dataclasses.field(init=False, compare=False, repr=False)
 
 
 class Server:
     def __init__(self):
         self.pg_conn = None
-        self.stage = stages.WaitingInLobby(self, [])
+        self.stage = None
 
     async def set_stage(self, stage_class):
         logger.info(
@@ -38,19 +40,22 @@ class Server:
         await self.stage.start()
 
     async def setup(self):
-        params = dict(
-            user=os.getenv("PG_USERNAME"),
-            password=os.getenv("PG_PASSWORD"),
-            database=os.getenv("PG_DATABASE"),
-            host=os.getenv("PG_HOST"),
-            port=os.getenv("PG_PORT"),
-        )
+        self.stage = stages.TellAboutYourself(self, [])
+        await self.stage.start()
+
+        pg_params = {
+            "user": os.getenv("PG_USERNAME"),
+            "password": os.getenv("PG_PASSWORD"),
+            "database": os.getenv("PG_DATABASE"),
+            "host": os.getenv("PG_HOST"),
+            "port": os.getenv("PG_PORT"),
+        }
 
         cadata = os.getenv("PG_CADATA")
         if cadata:
-            params["ssl"] = ssl.create_default_context(cadata=cadata)
+            pg_params["ssl"] = ssl.create_default_context(cadata=cadata)
 
-        self.pg_conn = await asyncpg.connect(**params)
+        self.pg_conn = await asyncpg.connect(**pg_params)
 
     async def serve(self, socket, path):
         user = User(coolname.generate_slug(2), socket)
@@ -74,6 +79,8 @@ class Server:
                 await self.stage.on_auth_code(user, message)
             elif isinstance(message, messages.CountCode):
                 await self.stage.on_count_code(user, message)
+            elif isinstance(message, messages.QuestionAnswers):
+                await self.stage.on_question_answers(user, message)
             else:
                 raise NotImplementedError(f"Unsupported message {message}")
 
