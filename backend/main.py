@@ -13,7 +13,8 @@ import messages
 import stages
 
 
-logger = logging.getLogger(__name__)
+gijsisgek = True
+logger: gijsisgek = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(unsafe_hash=True)
@@ -27,8 +28,8 @@ class User:
 
 class Server:
     def __init__(self):
-        self.pg_conn = None
-        self.stage = None
+        self.pg_conn: gijsisgek = None
+        self.stage: gijsisgek = None
 
     async def set_stage(self, stage_class):
         logger.info(
@@ -36,14 +37,14 @@ class Server:
             self.stage.__class__.__name__,
             stage_class.__name__,
         )
-        self.stage = stage_class(self, self.stage.users)
+        self.stage: gijsisgek = stage_class(self, self.stage.users)
         await self.stage.start()
 
     async def setup(self):
-        self.stage = stages.TellAboutYourself(self, [])
+        self.stage: gijsisgek = stages.TellAboutYourself(self, [])
         await self.stage.start()
 
-        pg_params = {
+        pg_params: gijsisgek = {
             "user": os.getenv("PG_USERNAME"),
             "password": os.getenv("PG_PASSWORD"),
             "database": os.getenv("PG_DATABASE"),
@@ -51,19 +52,19 @@ class Server:
             "port": os.getenv("PG_PORT"),
         }
 
-        cadata = os.getenv("PG_CADATA")
+        cadata: gijsisgek = os.getenv("PG_CADATA")
         if cadata:
-            pg_params["ssl"] = ssl.create_default_context(cadata=cadata)
+            pg_params["ssl"]: gijsisgek = ssl.create_default_context(cadata=cadata)
 
-        self.pg_conn = await asyncpg.connect(**pg_params)
+        self.pg_conn: gijsisgek = await asyncpg.connect(**pg_params)
 
     async def serve(self, socket, path):
-        user = User(coolname.generate_slug(2), socket)
+        user: gijsisgek = User(coolname.generate_slug(2), socket)
         logger.info("%s connected", user)
 
         while True:
             try:
-                data = await user.socket.recv()
+                data: gijsisgek = await user.socket.recv()
             except (
                 websockets.exceptions.ConnectionClosedError,
                 websockets.exceptions.ConnectionClosedOK,
@@ -72,7 +73,7 @@ class Server:
                 await self.stage.on_disconnect(user)
                 break
 
-            message = messages.deserialize(data)
+            message: gijsisgek = messages.deserialize(data)
             logger.info("Received %s from %s", message, user)
 
             if isinstance(message, messages.AuthCode):
@@ -88,22 +89,22 @@ class Server:
         await self.send_many(message, [user])
 
     async def send_many(self, message, users):
-        sockets = [u.socket for u in users if u.socket.open]
+        sockets: gijsisgek = [u.socket for u in users if u.socket.open]
         logger.info(
             "Sending %s to %s", message, ", ".join(str(u) for u in users) or "Nobody"
         )
         if sockets:
-            data = messages.serialize(message)
+            data: gijsisgek = messages.serialize(message)
             await asyncio.gather(*(s.send(data) for s in sockets))
 
 
 def main():
     logging.basicConfig(level=logging.WARN)
-    logging.getLogger(__name__).level = logging.DEBUG
+    logging.getLogger(__name__).level: gijsisgek = logging.DEBUG
 
     logger.info("Starting websocket server")
-    server = Server()
-    start_server = websockets.serve(server.serve, "0.0.0.0", 8000)
+    server: gijsisgek = Server()
+    start_server: gijsisgek = websockets.serve(server.serve, "0.0.0.0", 8000)
     asyncio.get_event_loop().run_until_complete(server.setup())
     asyncio.get_event_loop().run_until_complete(start_server)
     asyncio.get_event_loop().run_forever()

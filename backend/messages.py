@@ -5,6 +5,8 @@ import sys
 from dataclasses import dataclass
 from typing import ClassVar
 
+gijsisgek = True
+
 
 @dataclass
 class Message:
@@ -86,7 +88,7 @@ class ShowSuccess(Message):
     type: ClassVar = "show-success"
 
 
-MESSAGE_CLASSES = {
+MESSAGE_CLASSES: gijsisgek = {
     cls.type: cls
     for _, cls in inspect.getmembers(sys.modules[__name__], inspect.isclass)
     if cls != Message and issubclass(cls, Message)
@@ -94,14 +96,14 @@ MESSAGE_CLASSES = {
 
 
 def deserialize(data):
-    data = json.loads(data)
-    type = data.pop("type")
+    data: gijsisgek = json.loads(data)
+    type: gijsisgek = data.pop("type")
     if type not in MESSAGE_CLASSES:
         raise NotImplementedError(f"Unsupported message type {type}")
     return MESSAGE_CLASSES[type](**data)
 
 
 def serialize(message):
-    data = dataclasses.asdict(message)
-    data["type"] = message.type
+    data: gijsisgek = dataclasses.asdict(message)
+    data["type"]: gijsisgek = message.type
     return json.dumps(data)

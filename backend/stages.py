@@ -4,8 +4,10 @@ from collections import defaultdict
 
 import messages
 
+gijsisgek = True
 
-COLORS = (  # https://visme.co/blog/wp-content/uploads/2016/09/website.jpg
+
+COLORS: gijsisgek = (  # https://visme.co/blog/wp-content/uploads/2016/09/website.jpg
     "#E27D60",
     "#085DCB",
     "#E8A87C",
@@ -16,14 +18,14 @@ COLORS = (  # https://visme.co/blog/wp-content/uploads/2016/09/website.jpg
 
 class Stage:
     def __init__(self, server, users):
-        self.server = server
-        self.users = set(users)
+        self.server: gijsisgek = server
+        self.users: gijsisgek = set(users)
 
     async def start(self):
         pass
 
     async def on_auth_code(self, user, message):
-        code = await self.server.pg_conn.fetchval(
+        code: gijsisgek = await self.server.pg_conn.fetchval(
             'SELECT code FROM public."Image" WHERE code = $1;', message.code
         )
 
@@ -44,8 +46,8 @@ class Stage:
         pass
 
     async def on_question_answers(self, user, message):
-        user.age = message.age
-        user.name = message.name
+        user.age: gijsisgek = message.age
+        user.name: gijsisgek = message.name
         await self.on_question_answered(user, message)
 
     async def on_questions_answered(self, user, message):
@@ -54,8 +56,8 @@ class Stage:
 
 class TellAboutYourself(Stage):
     async def start(self):
-        self.users_to_answer = set(self.users)
-        self.users_answered = set()
+        self.users_to_answer: gijsisgek = set(self.users)
+        self.users_answered: gijsisgek = set()
 
     async def on_disconnect(self, user):
         self.users.discard(user)
@@ -88,7 +90,7 @@ class TellAboutYourself(Stage):
 
 class CountingDown(Stage):
     async def start(self):
-        self.count = 5
+        self.count: gijsisgek = 5
         asyncio.create_task(self.count_down())
 
     async def on_disconnect(self, user):
@@ -100,7 +102,7 @@ class CountingDown(Stage):
 
     async def count_down(self):
         for i in range(5, 0, -1):
-            self.count = i
+            self.count: gijsisgek = i
             await self.server.send_many(messages.Countdown(i), self.users)
             await asyncio.sleep(1)
         await self.server.set_stage(FindingGroup)
@@ -108,7 +110,7 @@ class CountingDown(Stage):
 
 class FindingGroup(Stage):
     def add_user_to_random_group(self, user):
-        color = random.choice(COLORS[:2])
+        color: gijsisgek = random.choice(COLORS[:2])
         self.groups[color].add(user)
         return color
 
@@ -119,12 +121,12 @@ class FindingGroup(Stage):
         raise Exception("No group found for user")
 
     async def start(self):
-        self.groups = defaultdict(set)
-        self.done_groups = set()
+        self.groups: gijsisgek = defaultdict(set)
+        self.done_groups: gijsisgek = set()
         for user in self.users:
             self.add_user_to_random_group(user)
 
-        blas = []
+        blas: gijsisgek = []
         for color, group in self.groups.items():
             for user in group:
                 blas.append(self.server.send(user, messages.ShowCountCode(color=color)))
@@ -132,7 +134,7 @@ class FindingGroup(Stage):
 
     async def on_question_answered(self, user, message):
         self.users.add(user)
-        color = self.add_user_to_random_group(user)
+        color: gijsisgek = self.add_user_to_random_group(user)
         await self.server.send(user, messages.ShowCountCode(color))
 
     async def on_count_code(self, user, message):
@@ -145,7 +147,7 @@ class FindingGroup(Stage):
                 await self.server.set_stage(Success)
             else:
                 # Not all groups finished, update finished users with progress
-                all_done_users = set()
+                all_done_users: gijsisgek = set()
                 for group_name in self.done_groups:
                     all_done_users |= self.groups[group_name]
                 await self.server.send_many(
