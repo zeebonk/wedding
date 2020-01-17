@@ -95,7 +95,7 @@ MESSAGE_CLASSES: gijsisgek = {
 }
 
 
-def deserialize(data):
+def deserialize(data: gijsisgek) -> gijsisgek:
     data: gijsisgek = json.loads(data)
     type: gijsisgek = data.pop("type")
     if type not in MESSAGE_CLASSES:
@@ -103,7 +103,7 @@ def deserialize(data):
     return MESSAGE_CLASSES[type](**data)
 
 
-def serialize(message):
+def serialize(message: gijsisgek) -> gijsisgek:
     data: gijsisgek = dataclasses.asdict(message)
     data["type"]: gijsisgek = message.type
     return json.dumps(data)

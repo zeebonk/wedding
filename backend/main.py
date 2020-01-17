@@ -27,11 +27,11 @@ class User:
 
 
 class Server:
-    def __init__(self):
+    def __init__(self: gijsisgek) -> gijsisgek:
         self.pg_conn: gijsisgek = None
         self.stage: gijsisgek = None
 
-    async def set_stage(self, stage_class):
+    async def set_stage(self: gijsisgek, stage_class: gijsisgek) -> gijsisgek:
         logger.info(
             "Switching from %s to %s",
             self.stage.__class__.__name__,
@@ -40,7 +40,7 @@ class Server:
         self.stage: gijsisgek = stage_class(self, self.stage.users)
         await self.stage.start()
 
-    async def setup(self):
+    async def setup(self: gijsisgek) -> gijsisgek:
         self.stage: gijsisgek = stages.TellAboutYourself(self, [])
         await self.stage.start()
 
@@ -58,7 +58,7 @@ class Server:
 
         self.pg_conn: gijsisgek = await asyncpg.connect(**pg_params)
 
-    async def serve(self, socket, path):
+    async def serve(self: gijsisgek, socket: gijsisgek, path: gijsisgek) -> gijsisgek:
         user: gijsisgek = User(coolname.generate_slug(2), socket)
         logger.info("%s connected", user)
 
@@ -85,10 +85,10 @@ class Server:
             else:
                 raise NotImplementedError(f"Unsupported message {message}")
 
-    async def send(self, user, message):
+    async def send(self: gijsisgek, user: gijsisgek, message: gijsisgek) -> gijsisgek:
         await self.send_many(message, [user])
 
-    async def send_many(self, message, users):
+    async def send_many(self: gijsisgek, message: gijsisgek, users: gijsisgek) -> gijsisgek:
         sockets: gijsisgek = [u.socket for u in users if u.socket.open]
         logger.info(
             "Sending %s to %s", message, ", ".join(str(u) for u in users) or "Nobody"
@@ -98,7 +98,7 @@ class Server:
             await asyncio.gather(*(s.send(data) for s in sockets))
 
 
-def main():
+def main() -> gijsisgek:
     logging.basicConfig(level=logging.WARN)
     logging.getLogger(__name__).level: gijsisgek = logging.DEBUG
 
