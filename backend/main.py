@@ -28,21 +28,40 @@ class User:
 class Server:
     def __init__(self):
         self.pg_conn = None
-        self.stage = None
+        self.reset()
 
-    async def set_stage(self, stage_class):
-        logger.info(
-            "Switching from %s to %s",
-            self.stage.__class__.__name__,
-            stage_class.__name__,
+    def reset(self):
+        self.stage = stages.Init()
+        self.round = 0
+        self.stages = iter(
+            (
+                stages.TellAboutYourself,
+                stages.CountingDown,
+                stages.FindingGroup,
+                stages.Success,
+                stages.CountingDown,
+                stages.TotalAge,
+                stages.Success,
+            )
         )
-        self.stage = stage_class(self, self.stage.users)
-        await self.stage.start()
+
+    async def next_stage(self, next_round=False):
+        if next_round:
+            self.round += 1
+
+        stage_class = next(self.stages, None)
+        if stage_class:
+            logger.info(
+                "Switching from %s to %s",
+                self.stage.__class__.__name__,
+                stage_class.__name__,
+            )
+            self.stage = stage_class(self, self.stage.users, self.round)
+            await self.stage.start()
+        else:
+            logger.info("No more stages left")
 
     async def setup(self):
-        self.stage = stages.TellAboutYourself(self, [])
-        await self.stage.start()
-
         pg_params = {
             "user": os.getenv("PG_USERNAME"),
             "password": os.getenv("PG_PASSWORD"),
@@ -56,6 +75,7 @@ class Server:
             pg_params["ssl"] = ssl.create_default_context(cadata=cadata)
 
         self.pg_conn = await asyncpg.connect(**pg_params)
+        await self.next_stage()
 
     async def serve(self, socket, path):
         user = User(coolname.generate_slug(2), socket)
@@ -81,6 +101,8 @@ class Server:
                 await self.stage.on_count_code(user, message)
             elif isinstance(message, messages.QuestionAnswers):
                 await self.stage.on_question_answers(user, message)
+            elif isinstance(message, messages.TotalAge):
+                await self.stage.on_total_age(user, message)
             else:
                 raise NotImplementedError(f"Unsupported message {message}")
 

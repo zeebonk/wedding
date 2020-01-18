@@ -1,23 +1,29 @@
 import asyncio
 import random
-from collections import defaultdict
 
 import messages
 
 
 COLORS = (  # https://visme.co/blog/wp-content/uploads/2016/09/website.jpg
-    "#E27D60",
-    "#085DCB",
-    "#E8A87C",
-    "#C38D93",
-    "#41B3A3",
+    "#e6194B",
+    "#f58231",
+    "#ffe119",
+    "#bfef45",
+    "#3cb44b",
+    "#42d4f4",
+    "#4363d8",
+    "#f032e6",
+    "#a9a9a9",
+    "#000000",
+    "#ffffff",
 )
 
 
 class Stage:
-    def __init__(self, server, users):
+    def __init__(self, server, users, round):
         self.server = server
         self.users = set(users)
+        self.round = round
 
     async def start(self):
         pass
@@ -28,7 +34,8 @@ class Stage:
         )
 
         if message.code == 9999:
-            await self.server.set_stage(TellAboutYourself)
+            self.server.reset()
+            await self.server.next_stage()
             await self.server.send_many(messages.Reset(), self.users)
         elif not code:
             await self.server.send(user, messages.AuthCodeInvalid())
@@ -46,10 +53,51 @@ class Stage:
     async def on_question_answers(self, user, message):
         user.age = message.age
         user.name = message.name
-        await self.on_question_answered(user, message)
+        await self.on_questions_answered(user, message)
 
     async def on_questions_answered(self, user, message):
         pass
+
+
+class Init(Stage):
+    def __init__(self):
+        self.users = set()
+
+
+class CountingDown(Stage):
+    async def start(self):
+        self.count = 5
+        asyncio.create_task(self.count_down())
+
+    async def on_disconnect(self, user):
+        self.users.discard(user)
+
+    async def on_questions_answered(self, user, message):
+        self.users.add(user)
+        await self.server.send(user, messages.Countdown(self.count, self.round))
+
+    async def count_down(self):
+        for i in range(5, 0, -1):
+            self.count = i
+            await self.server.send_many(messages.Countdown(i, self.round), self.users)
+            await asyncio.sleep(1)
+        await self.server.next_stage(next_round=True)
+
+
+class Success(Stage):
+    async def start(self):
+        await self.server.send_many(messages.ShowSuccess(round=self.round), self.users)
+        asyncio.create_task(self.go_to_next_stage())
+
+    async def on_disconnect(self, user):
+        self.users.discard(user)
+
+    async def on_questions_answered(self, user, message):
+        self.users.add(user)
+
+    async def go_to_next_stage(self):
+        await asyncio.sleep(2)
+        await self.server.next_stage()
 
 
 class TellAboutYourself(Stage):
@@ -70,9 +118,9 @@ class TellAboutYourself(Stage):
 
     async def on_auth_code_invalid(self, user, message):
         if message.code == 9998:
-            await self.server.set_stage(CountingDown)
+            await self.server.next_stage()
 
-    async def on_question_answered(self, user, message):
+    async def on_questions_answered(self, user, message):
         self.users_to_answer.discard(user)
         self.users_answered.add(user)
         await self.send_lobby_count()
@@ -86,94 +134,144 @@ class TellAboutYourself(Stage):
         )
 
 
-class CountingDown(Stage):
-    async def start(self):
-        self.count = 5
-        asyncio.create_task(self.count_down())
+class Groups:
+    def __init__(self, group_names):
+        self._groups = {name: set() for name in group_names}
+        self._done = set()
 
-    async def on_disconnect(self, user):
-        self.users.discard(user)
+    def add_user_to_random_group(self, user):
+        group = random.choice(list(self._groups.keys()))
+        self._groups[group].add(user)
+        return group
 
-    async def on_question_answered(self, user, message):
-        self.users.add(user)
-        await self.server.send(user, messages.Countdown(self.count))
+    def remove_user(self, user):
+        for users in self._groups.values():
+            users.discard(user)
 
-    async def count_down(self):
-        for i in range(5, 0, -1):
-            self.count = i
-            await self.server.send_many(messages.Countdown(i), self.users)
-            await asyncio.sleep(1)
-        await self.server.set_stage(FindingGroup)
+    def group(self, user):
+        for group, users in self._groups.items():
+            if user in users:
+                return group
+        raise Exception(f"{user} not in any group")
+
+    def users(self, group):
+        return self._groups[group]
+
+    def non_empty(self):
+        return [group for group, users in self._groups.items() if users]
+
+    def done(self):
+        return [
+            group
+            for group, users in self._groups.items()
+            if users and group in self._done
+        ]
+
+    def done_users(self):
+        done_users = set()
+        for group in self._done:
+            done_users |= self.users(group)
+        return done_users
+
+    def mark_done(self, group):
+        self._done.add(group)
 
 
 class FindingGroup(Stage):
-    def add_user_to_random_group(self, user):
-        color = random.choice(COLORS[:2])
-        self.groups[color].add(user)
-        return color
-
-    def get_group_name_and_group_by_user(self, user):
-        for group_name, group in self.groups.items():
-            if user in group:
-                return group_name, group
-        raise Exception("No group found for user")
-
     async def start(self):
-        self.groups = defaultdict(set)
-        self.done_groups = set()
+        self.groups = Groups(random.sample(COLORS, 2))
+
+        send_tasks = []
         for user in self.users:
-            self.add_user_to_random_group(user)
+            group = self.groups.add_user_to_random_group(user)
+            send_tasks.append(
+                self.server.send(user, messages.ShowCountCode(color=group))
+            )
 
-        blas = []
-        for color, group in self.groups.items():
-            for user in group:
-                blas.append(self.server.send(user, messages.ShowCountCode(color=color)))
-        await asyncio.gather(*blas)
+        await asyncio.gather(*send_tasks)
 
-    async def on_question_answered(self, user, message):
+    async def on_questions_answered(self, user, message):
         self.users.add(user)
-        color = self.add_user_to_random_group(user)
-        await self.server.send(user, messages.ShowCountCode(color))
+        group = self.groups.add_user_to_random_group(user)
+        await self.server.send(user, messages.ShowCountCode(color=group))
+        await self.check_group_progress()
 
     async def on_count_code(self, user, message):
-        group_name, group = self.get_group_name_and_group_by_user(user)
-        if message.code == len(group):
+        group = self.groups.group(user)
+        users = self.groups.users(group)
+
+        if message.code == len(users):
             # Code guessed correctly
-            self.done_groups.add(group_name)
-            if len(self.done_groups) == len(self.groups):
-                # All groups finished
-                await self.server.set_stage(Success)
-            else:
-                # Not all groups finished, update finished users with progress
-                all_done_users = set()
-                for group_name in self.done_groups:
-                    all_done_users |= self.groups[group_name]
-                await self.server.send_many(
-                    messages.WaitForGroups(
-                        done=len(self.done_groups), total=len(self.groups)
-                    ),
-                    all_done_users,
-                )
+            self.groups.mark_done(group)
+            await self.check_group_progress()
         else:
             await self.server.send(user, messages.CountCodeInvalid())
 
     async def on_disconnect(self, user):
         self.users.discard(user)
-        for group in self.groups.values():
-            group.discard(user)
+        self.groups.remove_user(user)
+        await self.check_group_progress()
+
+    async def check_group_progress(self):
+        n_groups_done = len(self.groups.done())
+        n_groups_non_empty = len(self.groups.non_empty())
+
+        if n_groups_done == n_groups_non_empty:
+            # All groups finished
+            await self.server.next_stage()
+        else:
+            # Not all groups finished, update finished users with progress
+            await self.server.send_many(
+                messages.WaitForGroups(done=n_groups_done, total=n_groups_non_empty),
+                self.groups.done_users(),
+            )
 
 
-class Success(Stage):
+class TotalAge(Stage):
     async def start(self):
-        await self.server.send_many(messages.ShowSuccess(), self.users)
-        asyncio.create_task(self.go_to_next_stage())
+        self.groups = Groups(random.sample(COLORS, 8))
+
+        send_tasks = []
+        for user in self.users:
+            group = self.groups.add_user_to_random_group(user)
+            send_tasks.append(
+                self.server.send(user, messages.ShowTotalAge(color=group))
+            )
+
+        await asyncio.gather(*send_tasks)
+
+    async def on_questions_answered(self, user, message):
+        self.users.add(user)
+        group = self.groups.add_user_to_random_group(user)
+        await self.server.send(user, messages.ShowTotalAge(color=group))
+        await self.check_group_progress()
+
+    async def on_total_age(self, user, message):
+        group = self.groups.group(user)
+        users = self.groups.users(group)
+
+        if message.code == sum(u.age for u in users):
+            # Code guessed correctly
+            self.groups.mark_done(group)
+            await self.check_group_progress()
+        else:
+            await self.server.send(user, messages.TotalAgeInvalid())
 
     async def on_disconnect(self, user):
         self.users.discard(user)
+        self.groups.remove_user(user)
+        await self.check_group_progress()
 
-    async def on_question_answered(self, user, message):
-        self.users.add(user)
+    async def check_group_progress(self):
+        n_groups_done = len(self.groups.done())
+        n_groups_non_empty = len(self.groups.non_empty())
 
-    async def go_to_next_stage(self):
-        await asyncio.sleep(2)
-        await self.server.set_stage(CountingDown)
+        if n_groups_done == n_groups_non_empty:
+            # All groups finished
+            await self.server.next_stage()
+        else:
+            # Not all groups finished, update finished users with progress
+            await self.server.send_many(
+                messages.WaitForGroups(done=n_groups_done, total=n_groups_non_empty),
+                self.groups.done_users(),
+            )

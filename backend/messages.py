@@ -58,6 +58,23 @@ class CountCodeInvalid(Message):
 
 
 @dataclass
+class ShowTotalAge(Message):
+    type: ClassVar = "show-total-age"
+    color: str
+
+
+@dataclass
+class TotalAge(Message):
+    type: ClassVar = "total-age"
+    code: int
+
+
+@dataclass
+class TotalAgeInvalid(Message):
+    type: ClassVar = "total-age-invalid"
+
+
+@dataclass
 class AuthCode(Message):
     type: ClassVar = "auth-code"
     code: int
@@ -72,6 +89,7 @@ class AuthCodeOk(Message):
 class Countdown(Message):
     type: ClassVar = "countdown"
     count: int
+    round: int
 
 
 @dataclass
@@ -84,6 +102,7 @@ class WaitForGroups(Message):
 @dataclass
 class ShowSuccess(Message):
     type: ClassVar = "show-success"
+    round: int
 
 
 MESSAGE_CLASSES = {

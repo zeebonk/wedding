@@ -13,6 +13,15 @@
     </head>
     <body>
         <div class="container">
+            <div class="page row" id="connect">
+                <div class="col-12">
+                    <i class="header-icon fas fa-wifi"></i>
+                    <p>
+                        Connecting...
+                    </p>
+                </div>
+            </div>
+
             <div class="page row" id="auth-code">
                 <div class="col-12">
                     <i class="header-icon fas fa-user-secret"></i>
@@ -99,7 +108,7 @@
             <div class="page row" id="countdown">
                 <div class="col-12">
                     <i class="header-icon fas fa-exclamation-triangle"></i>
-                    <p>Round 1 starting in...</p>
+                    <p>Round <span class="round">1</span> starting in...</p>
                     <p></p>
                     <h1 class="count">5</h1>
                 </div>
@@ -137,7 +146,7 @@
                 <div class="col-12">
                     <i class="header-icon fas fa-thumbs-up"></i>
                     <h1><span class="done">5</span> / <span class="total">5</span></h1>
-                    <p>Waiting for other teams to finish...</p>
+                    <p>Waiting for the other teams to finish...</p>
                 </div>
             </div>
 
@@ -145,7 +154,34 @@
                 <div class="col-12">
                     <i class="header-icon fas fa-check"></i>
                     <h1>Succes!</h1>
-                    <p>Round 1 completed, get ready for round 2...</p>
+                    <p>Round <span class="round-finished">?</span> completed, get ready for round <span class="round-next">?</span>....</p>
+                </div>
+            </div>
+
+            <div class="page row" id="total-age">
+                <div class="col-12">
+                    <i class="header-icon fas fa-users"></i>
+                    <p class="intro">
+                        A little more challenging now. Instead of just counting heads, lets get to
+                        know each other a little. What is the combined age of your group?
+                    </p>
+                    <form>
+                        <div class="form-row">
+                            <label>What is the total age of your group?</label>
+                            <input
+                                name="code"
+                                type="number"
+                                autocomplete="off"
+                                class="form-control"
+                            />
+                            <div class="invalid-feedback">
+                                Incorrect, please try again!
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary btn-lg" name="submit">
+                            <i class="fas fa-key"></i> Unlock
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
