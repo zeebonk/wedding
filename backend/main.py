@@ -35,6 +35,7 @@ class Server:
         self.round = 0
         self.stages = iter(
             (
+                stages.Teaser,
                 stages.TellAboutYourself,
                 stages.CountingDown,
                 stages.FindingGroup,
@@ -80,6 +81,8 @@ class Server:
     async def serve(self, socket, path):
         user = User(coolname.generate_slug(2), socket)
         logger.info("%s connected", user)
+
+        await self.stage.on_connect(user)
 
         while True:
             try:

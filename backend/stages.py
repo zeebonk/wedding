@@ -44,6 +44,9 @@ class Stage:
             await self.server.send(user, messages.AuthCodeOk())
             await self.on_auth_code_ok(user, message)
 
+    async def on_connect(self, user):
+        await self.server.send(user, messages.ShowAuthCode())
+
     async def on_auth_code_ok(self, user, message):
         pass
 
@@ -62,6 +65,23 @@ class Stage:
 class Init(Stage):
     def __init__(self):
         self.users = set()
+
+
+class Teaser(Stage):
+    async def start(self):
+        self.connections = set()
+
+    async def on_auth_code_invalid(self, user, message):
+        if message.code == 9998:
+            await self.server.send_many(messages.ShowAuthCode(), self.connections)
+            await self.server.next_stage()
+
+    async def on_connect(self, user):
+        self.connections.add(user)
+        await self.server.send(user, messages.ShowTeaser())
+
+    async def on_disconnect(self, user):
+        self.connections.discard(user)
 
 
 class CountingDown(Stage):

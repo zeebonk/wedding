@@ -30,14 +30,14 @@
         setTimeout(function() {
             window.location = "";
         }, 1000);
-    }
+    };
 
     ws.onopen = function(event) {
-        showPage("auth-code");
+        showPage("teaser");
         ws.onclose = function(event) {
             window.location = "";
-        }
-    }
+        };
+    };
 
     $("#auth-code form").onsubmit = function() {
         send(ws, {
@@ -78,7 +78,11 @@
         console.log(data);
         var type = data["type"];
 
-        if (type == "auth-code-ok") {
+        if (type == "show-teaser") {
+            showPage("teaser");
+        } else if (type == "show-auth-code") {
+            showPage("auth-code");
+        } else if (type == "auth-code-ok") {
             showPage("questions-form");
         } else if (type == "auth-code-invalid") {
             $("#auth-code .invalid-feedback").style.display = "block";

@@ -12,6 +12,16 @@ class Message:
 
 
 @dataclass
+class ShowTeaser(Message):
+    type: ClassVar = "show-teaser"
+
+
+@dataclass
+class ShowAuthCode(Message):
+    type: ClassVar = "show-auth-code"
+
+
+@dataclass
 class LobbyCount(Message):
     type: ClassVar = "lobby-count"
     connected: int
