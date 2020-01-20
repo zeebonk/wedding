@@ -17,7 +17,7 @@
                 <div class="col-12">
                     <i class="header-icon fas fa-wifi"></i>
                     <p>
-                        Connecting...
+                        Verbinden...
                     </p>
                 </div>
             </div>
@@ -26,9 +26,8 @@
                 <div class="col-12">
                     <i class="header-icon fas fa-question"></i>
                     <p>
-                        18:30
+                        20:30
                     </p>
-                    <p class="users"></p>
                 </div>
             </div>
 
@@ -37,20 +36,21 @@
                     <i class="header-icon fas fa-user-secret"></i>
                     <form>
                         <div class="form-row">
-                            <label>Enter your access code:</label>
-                            <input
-                                name="code"
-                                type="number"
-                                required
-                                autocomplete="off"
-                                class="form-control"
-                            />
-                            <div class="invalid-feedback">
-                                Code invalid, did you enter it correctly?
+                            <div class="col-12">
+                                <label for="code">Uw toegangscode:</label>
+                                <input
+                                    name="code"
+                                    type="text"
+                                    autocomplete="off"
+                                    class="form-control"
+                                />
+                                <div class="invalid-tooltip">
+                                    Ingevoerde code ongeldig, probeer opnieuw.
+                                </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-secondary btn-lg" name="submit">
-                            <i class="fas fa-key"></i> Unlock
+                        <button type="submit" class="btn btn-secondary" name="submit">
+                            Ontgrendel... <i class="fas fa-key"></i>
                         </button>
                     </form>
                 </div>
@@ -60,38 +60,47 @@
                 <div class="col-12">
                     <i class="header-icon fas fa-comments"></i>
                     <p class="intro">
-                        To unlock the party, you will all need to work together with all the people
-                        around you! To get started, please tell a bit more about yourself.
+                        Het feest begint pas wanneer jullie met elkaar de codes weten te vinden!
+                        Samenwerking essentieel, je komt niet verder als je op je plek blijft
+                        staan...
+                        <br />
+                        <br />
+                        Vul de volgende gegevens in en <u>onthoud je antwoorden</u>, die zal je
+                        later nodig hebben...
                     </p>
                     <form>
                         <div class="form-row">
-                            <label>What's your name?</label>
-                            <input
-                                name="name"
-                                type="text"
-                                required
-                                autocomplete="off"
-                                class="form-control"
-                            />
-                            <div class="invalid-feedback">
-                                Code invalid, did you enter it correctly?
+                            <div class="col-12">
+                                <label for="name">Naam:</label>
+                                <input
+                                    name="name"
+                                    type="text"
+                                    required
+                                    autocomplete="off"
+                                    class="form-control"
+                                />
+                                <div class="invalid-tooltip">
+                                    Naam ongeldig, probeer nogmaals!
+                                </div>
                             </div>
                         </div>
                         <div class="form-row">
-                            <label>How old are you?</label>
-                            <input
-                                name="age"
-                                type="number"
-                                required
-                                autocomplete="off"
-                                class="form-control"
-                            />
-                            <div class="invalid-feedback">
-                                Code invalid, did you enter it correctly?
+                            <div class="col-12">
+                                <label for="age">Leeftijd:</label>
+                                <input
+                                    name="age"
+                                    type="number"
+                                    required
+                                    autocomplete="off"
+                                    class="form-control"
+                                />
+                                <div class="invalid-tooltip">
+                                    Leeftijd ongeldig, probeer opnieuw!
+                                </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-secondary btn-lg" name="submit">
-                            Continue
+                        <button type="submit" class="btn btn-secondary" name="submit">
+                            Ontgrendel... <i class="fas fa-key"></i>
                         </button>
                     </form>
                 </div>
@@ -101,16 +110,13 @@
                 <div class="col-12">
                     <i class="header-icon header-icon-rotate fas fa-compass"></i>
                     <p class="intro">
-                        There are currently <span class="waiting">0</span> other players that are
-                        ready to go. There are still <span class="answering">0</span>
-                        players that are answering the questions. Once everyone is ready, the game
-                        will begin...
+                        Er zijn op dit moment <span class="waiting">0</span> andere spelers klaar om
+                        te beginnen. Er zijn nog <span class="answering">0</span> spelers bezig met
+                        het invullen van hun gegevens. Wanneer iedereen zijn gegevens heeft ingevuld
+                        zal het spel beginnen...
                     </p>
                     <p>
-                        <br />
-                        <br />
-                        <br />
-                        Please await further instructions...
+                        Even geduld A.U.B...
                     </p>
                 </div>
             </div>
@@ -118,8 +124,7 @@
             <div class="page row" id="countdown">
                 <div class="col-12">
                     <i class="header-icon fas fa-exclamation-triangle"></i>
-                    <p>Round <span class="round">1</span> starting in...</p>
-                    <p></p>
+                    <p class="intro">Ronde <span class="round">1</span> begint in...</p>
                     <h1 class="count">5</h1>
                 </div>
             </div>
@@ -128,25 +133,26 @@
                 <div class="col-12">
                     <i class="header-icon fas fa-users"></i>
                     <p class="intro">
-                        The first code is simple. Find all the other guests that have the same
-                        screen color as you have and tell me with how many you are...
+                        We beginnen simpel. Zoek alle andere gasten met het de zelfde kleur scherm
+                        en vertel me met hoeveel jullie zijn!
                     </p>
-
                     <form>
                         <div class="form-row">
-                            <label>How many people have the same screen color?</label>
-                            <input
-                                name="code"
-                                type="number"
-                                autocomplete="off"
-                                class="form-control"
-                            />
-                            <div class="invalid-feedback">
-                                Incorrect, please try again!
+                            <div class="col-12">
+                                <label for="code">Aantal gasten:</label>
+                                <input
+                                    name="code"
+                                    type="number"
+                                    autocomplete="off"
+                                    class="form-control"
+                                />
+                                <div class="invalid-tooltip">
+                                    Onjuist, probeer opnieuw!
+                                </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-secondary btn-lg" name="submit">
-                            <i class="fas fa-key"></i> Unlock
+                        <button type="submit" class="btn btn-secondary" name="submit">
+                            Ontgrendel... <i class="fas fa-key"></i>
                         </button>
                     </form>
                 </div>
@@ -155,19 +161,22 @@
             <div class="page row" id="wait-for-groups">
                 <div class="col-12">
                     <i class="header-icon fas fa-thumbs-up"></i>
+                    <p class="intro">
+                        Goed werk! Wacht tot de andere teams ook hun code hebben gevonden...
+                    </p>
                     <h1><span class="done">5</span> / <span class="total">5</span></h1>
-                    <p>Waiting for the other teams to finish...</p>
                 </div>
             </div>
 
             <div class="page row" id="success">
                 <div class="col-12">
                     <i class="header-icon fas fa-check"></i>
-                    <h1>Succes!</h1>
-                    <p>
-                        Round <span class="round-finished">?</span> completed, get ready for round
-                        <span class="round-next">?</span>....
+                    <p class="intro">
+                        Jullie hebben ronde <span class="round-finished">?</span> gekraakt en zijn
+                        daarmee een stapje dichterbij het starten van het feest. Maak je klaar voor
+                        ronde <span class="round-next">?</span>....
                     </p>
+                    <h1>Goed gedaan!</h1>
                 </div>
             </div>
 
@@ -175,29 +184,91 @@
                 <div class="col-12">
                     <i class="header-icon fas fa-users"></i>
                     <p class="intro">
-                        A little more challenging now. Instead of just counting heads, lets get to
-                        know each other a little. What is the combined age of your group?
+                        Iets meer uitdaging deze keer... In plaats van personen tellen moeten jullie
+                        iets meer over elkaar te weten komen. Wat is de gecombineerde leeftijd van
+                        de mensen met het zeldfe kleur scherm?
                     </p>
                     <form>
                         <div class="form-row">
-                            <label>What is the total age of your group?</label>
-                            <input
-                                name="code"
-                                type="number"
-                                autocomplete="off"
-                                class="form-control"
-                            />
-                            <div class="invalid-feedback">
-                                Incorrect, please try again!
+                            <div class="col-12">
+                                <label>Opgetelde leeftijd:</label>
+                                <input
+                                    name="code"
+                                    type="number"
+                                    autocomplete="off"
+                                    class="form-control"
+                                />
+                                <div class="invalid-tooltip">
+                                    Onjuist, probeer opnieuw!
+                                </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-secondary btn-lg" name="submit">
-                            <i class="fas fa-key"></i> Unlock
+                        <button type="submit" class="btn btn-secondary" name="submit">
+                            Ontgrendel... <i class="fas fa-key"></i>
                         </button>
                     </form>
                 </div>
             </div>
+
+            <div class="page row" id="name-order">
+                <div class="col-12">
+                    <i class="header-icon fas fa-users"></i>
+                    <p class="intro">
+                        Wat complexer nu. In plaats van 1 antwoord voor de hele groep, moet nu elk
+                        teamlid een eigen antwoord invullen!
+                        <br />
+                        <br />
+                        Als je alle namen van de groepsleden van A tot Z op volgorde zet, wat is dan
+                        de persoonlijke code van de gene na jou? Ben je de laatste in de rij? Vul
+                        dan "0" in.
+                    </p>
+                    <form>
+                        <div class="form-row">
+                            <div class="col-12">
+                                <label for="code">Code van de persoon na jou:</label>
+                                <input
+                                    name="code"
+                                    type="number"
+                                    autocomplete="off"
+                                    class="form-control"
+                                />
+                                <div class="invalid-tooltip">
+                                    Onjuist, probeer opnieuw!
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" name="submit">
+                            Ontgrendel... <i class="fas fa-key"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="page row" id="team-progress">
+                <div class="col-12">
+                    <i class="header-icon fas fa-hands-helping"></i>
+                    <p>
+                        Lekker bezig hoor! Help je teamleden hun codes ook te vinden...
+                    </p>
+                    <h1><span class="done">5</span> / <span class="total">5</span></h1>
+                </div>
+            </div>
         </div>
+        <script
+            src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+            integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+            crossorigin="anonymous"
+        ></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous"
+        ></script>
+
+        <script
+            type="text/javascript"
+            src="vendor/bootstrap-4.3.1-dist/js/bootstrap.min.js"
+        ></script>
         <script type="text/javascript" src="main.js"></script>
     </body>
 </html>

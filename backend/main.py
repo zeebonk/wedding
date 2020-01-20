@@ -23,6 +23,11 @@ class User:
 
     name: str = dataclasses.field(init=False, compare=False, repr=False)
     age: int = dataclasses.field(init=False, compare=False, repr=False)
+    code: int = dataclasses.field(init=False, compare=False, repr=False)
+
+    group: typing.Any = dataclasses.field(
+        init=False, compare=False, repr=False, default=None
+    )
 
 
 class Server:
@@ -42,6 +47,9 @@ class Server:
                 stages.Success,
                 stages.CountingDown,
                 stages.TotalAge,
+                stages.Success,
+                stages.CountingDown,
+                stages.NameOrder,
                 stages.Success,
             )
         )
@@ -106,6 +114,8 @@ class Server:
                 await self.stage.on_question_answers(user, message)
             elif isinstance(message, messages.TotalAge):
                 await self.stage.on_total_age(user, message)
+            elif isinstance(message, messages.NameOrder):
+                await self.stage.on_name_order(user, message)
             else:
                 raise NotImplementedError(f"Unsupported message {message}")
 

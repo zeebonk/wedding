@@ -5,8 +5,20 @@ body,
     height: 100%;
 }
 
+body {
+    border: 10px #444 solid;
+    border-top: 0;
+    border-bottom: 0;
+}
+
+.container {
+    padding-left: 0;
+    padding-right: 0;
+}
+
 .page {
-    padding: 0 30px;
+    padding: 0 10px;
+    margin: 0;
 }
 
 body {
@@ -15,8 +27,8 @@ body {
 
 h1 {
     text-align: center;
-    padding-top: 1em;
-    margin-bottom: 1em;
+    padding-top: 0.7em;
+    margin-bottom: 0.7em;
     font-size: 5em;
 }
 
@@ -33,17 +45,18 @@ input[type="text"] {
 
 .form-row {
     padding-bottom: 1em;
+    text-align: left;
 }
 
 .intro {
-    margin-bottom: 4em;
+    margin-bottom: 3em;
     text-align: justify;
 }
 
 .header-icon {
     font-size: 7em;
-    margin-top: 0.7em;
-    margin-bottom: 0.7em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
     animation: pulse 2s alternate infinite ease-in-out;
 }
 
@@ -67,4 +80,12 @@ input[type="text"] {
     100% {
         transform: scale(1.2) rotate(360deg);
     }
+}
+
+p,
+label {
+    padding: 3px 10px;
+    border-radius: 3px;
+    background: #444;
+    color: white;
 }

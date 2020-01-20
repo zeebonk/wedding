@@ -1,4 +1,4 @@
-FROM nginx:1.17.6-alpine
+FROM nginx:1.17.7-alpine
 
 # Install used utilities
 RUN apk add \

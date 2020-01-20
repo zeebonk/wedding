@@ -115,6 +115,30 @@ class ShowSuccess(Message):
     round: int
 
 
+@dataclass
+class ShowNameOrder(Message):
+    type: ClassVar = "show-name-order"
+    color: str
+
+
+@dataclass
+class NameOrder(Message):
+    type: ClassVar = "name-order"
+    code: str
+
+
+@dataclass
+class NameOrderInvalid(Message):
+    type: ClassVar = "name-order-invalid"
+
+
+@dataclass
+class TeamProgress(Message):
+    type: ClassVar = "team-progress"
+    n_users: int
+    n_done_users: int
+
+
 MESSAGE_CLASSES = {
     cls.type: cls
     for _, cls in inspect.getmembers(sys.modules[__name__], inspect.isclass)

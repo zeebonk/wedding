@@ -2,15 +2,22 @@
     var $ = document.querySelector.bind(document);
     var $$ = document.querySelectorAll.bind(document);
 
-    function showPage(page) {
+    function showPage(pageID) {
         var pages = $$(".page");
         for (var i = 0; i < pages.length; i++) {
-            if (pages[i].id != page) {
-                pages[i].style.display = "none";
-                pages[i].style.background = "none";
+            var page = pages[i];
+            if (page.id != pageID) {
+                page.style.display = "none";
+                page.style.background = "none";
+
+                var inputs = page.querySelectorAll("input[type=text], input[type=number]");
+                for (var j = 0; j < inputs.length; j++) {
+                    var input = inputs[j];
+                    input.value = "";
+                }
             }
         }
-        $("#" + page).style.display = "block";
+        $("#" + pageID).style.display = "block";
     }
 
     function send(ws, data) {
@@ -72,6 +79,14 @@
         return false;
     };
 
+    $("#name-order form").onsubmit = function() {
+        send(ws, {
+            type: "name-order",
+            code: parseInt($("#name-order input[name=code]").value)
+        });
+        return false;
+    };
+
     ws.onmessage = function(event) {
         console.log(event);
         var data = JSON.parse(event.data);
@@ -85,7 +100,7 @@
         } else if (type == "auth-code-ok") {
             showPage("questions-form");
         } else if (type == "auth-code-invalid") {
-            $("#auth-code .invalid-feedback").style.display = "block";
+            $("#auth-code input").classList.add("is-invalid");
             showPage("auth-code");
         } else if (type == "lobby-count") {
             $("#lobby .answering").innerText = data["connected"] - data["done"];
@@ -97,10 +112,11 @@
             showPage("countdown");
             window.navigator.vibrate(200);
         } else if (type == "show-count-code") {
-            $("#count-code").style.background = data["color"];
+            $("#count-code").style.background = data["color"][0];
+            $("#count-code").style.color = data["color"][1];
             showPage("count-code");
         } else if (type == "count-code-invalid") {
-            $("#count-code .invalid-feedback").style.display = "block";
+            $("#count-code input").classList.add("is-invalid");
             showPage("count-code");
         } else if (type == "wait-for-groups") {
             $("#wait-for-groups .total").innerText = data["total"];
@@ -111,11 +127,23 @@
             $("#success .round-next").innerText = data["round"] + 1;
             showPage("success");
         } else if (type == "show-total-age") {
-            $("#total-age").style.background = data["color"];
+            $("#total-age").style.background = data["color"][0];
+            $("#total-age").style.color = data["color"][1];
             showPage("total-age");
         } else if (type == "total-age-invalid") {
-            $("#total-age .invalid-feedback").style.display = "block";
+            $("#total-age input").classList.add("is-invalid");
             showPage("total-age");
+        } else if (type == "show-name-order") {
+            $("#name-order").style.background = data["color"][0];
+            $("#name-order").style.color = data["color"][1];
+            showPage("name-order");
+        } else if (type == "name-order-invalid") {
+            $("#name-order input").classList.add("is-invalid");
+            showPage("name-order");
+        } else if (type == "team-progress") {
+            $("#team-progress .total").innerText = data["n_users"];
+            $("#team-progress .done").innerText = data["n_done_users"];
+            showPage("team-progress");
         } else if (type == "reset") {
             window.location = "";
         }
