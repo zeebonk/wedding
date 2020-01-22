@@ -49,15 +49,15 @@
     $("#auth-code form").onsubmit = function() {
         send(ws, {
             type: "auth-code",
-            code: parseInt($("#auth-code input[name=code]").value)
+            code: $("#auth-code input[name=code]").value
         });
         return false;
     };
 
     $("#count-code form").onsubmit = function() {
         send(ws, {
-            type: "count-code",
-            code: parseInt($("#count-code input[name=code]").value)
+            type: "code",
+            code: $("#count-code input[name=code]").value
         });
         return false;
     };
@@ -66,23 +66,31 @@
         send(ws, {
             type: "question-answers",
             name: $("#questions-form input[name=name]").value,
-            age: parseInt($("#questions-form input[name=age]").value)
+            age: $("#questions-form input[name=age]").value
         });
         return false;
     };
 
     $("#total-age form").onsubmit = function() {
         send(ws, {
-            type: "total-age",
-            code: parseInt($("#total-age input[name=code]").value)
+            type: "code",
+            code: $("#total-age input[name=code]").value
         });
         return false;
     };
 
     $("#name-order form").onsubmit = function() {
         send(ws, {
-            type: "name-order",
-            code: parseInt($("#name-order input[name=code]").value)
+            type: "code",
+            code: $("#name-order input[name=code]").value
+        });
+        return false;
+    };
+
+    $("#slow-dance form").onsubmit = function() {
+        send(ws, {
+            type: "code",
+            code: $("#slow-dance input[name=code]").value
         });
         return false;
     };
@@ -140,10 +148,19 @@
         } else if (type == "name-order-invalid") {
             $("#name-order input").classList.add("is-invalid");
             showPage("name-order");
+        } else if (type == "show-slow-dance") {
+            $("#slow-dance").style.background = data["color"][0];
+            $("#slow-dance").style.color = data["color"][1];
+            showPage("slow-dance");
+        } else if (type == "slow-dance-code-invalid") {
+            $("#slow-dance input").classList.add("is-invalid");
+            showPage("slow-dance");
         } else if (type == "team-progress") {
             $("#team-progress .total").innerText = data["n_users"];
             $("#team-progress .done").innerText = data["n_done_users"];
             showPage("team-progress");
+        } else if (type == "show-the-end") {
+            showPage("the-end");
         } else if (type == "reset") {
             window.location = "";
         }

@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 
+# pylint: disable=redefined-builtin
+
+
 @dataclass
 class Message:
     pass
@@ -52,12 +55,6 @@ class ShowCountCode(Message):
 
 
 @dataclass
-class CountCode(Message):
-    type: ClassVar = "count-code"
-    code: int
-
-
-@dataclass
 class CountCodeOk(Message):
     type: ClassVar = "count-code-ok"
 
@@ -74,12 +71,6 @@ class ShowTotalAge(Message):
 
 
 @dataclass
-class TotalAge(Message):
-    type: ClassVar = "total-age"
-    code: int
-
-
-@dataclass
 class TotalAgeInvalid(Message):
     type: ClassVar = "total-age-invalid"
 
@@ -87,7 +78,7 @@ class TotalAgeInvalid(Message):
 @dataclass
 class AuthCode(Message):
     type: ClassVar = "auth-code"
-    code: int
+    code: str
 
 
 @dataclass
@@ -122,14 +113,30 @@ class ShowNameOrder(Message):
 
 
 @dataclass
-class NameOrder(Message):
-    type: ClassVar = "name-order"
+class Code(Message):
+    type: ClassVar = "code"
     code: str
 
 
 @dataclass
 class NameOrderInvalid(Message):
     type: ClassVar = "name-order-invalid"
+
+
+@dataclass
+class ShowSlowDance(Message):
+    type: ClassVar = "show-slow-dance"
+    color: str
+
+
+@dataclass
+class SlowDanceCodeInvalid(Message):
+    type: ClassVar = "slow-dance-code-invalid"
+
+
+@dataclass
+class ShowTheEnd(Message):
+    type: ClassVar = "show-the-end"
 
 
 @dataclass

@@ -1,3 +1,6 @@
+variable reset_code {}
+variable next_stage_code {}
+
 resource "kubernetes_deployment" "backend" {
   metadata {
     name      = "backend"
@@ -52,6 +55,14 @@ resource "kubernetes_deployment" "backend" {
           env {
             name  = "PG_CADATA"
             value = file("pg-certificate.crt")
+          }
+          env {
+            name  = "RESET_CODE"
+            value = var.reset_code
+          }
+          env {
+            name  = "NEXT_STAGE_CODE"
+            value = var.next_stage_code
           }
         }
         image_pull_secrets {

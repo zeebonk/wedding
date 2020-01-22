@@ -1,63 +1,13 @@
 import asyncio
 import random
 
-import messages
-
-
-COLORS = (
-    ("#FC766AFF", "#5B84B1FF"),
-    ("#5F4B8BFF", "#E69A8DFF"),
-    ("#42EADDFF", "#CDB599FF"),
-    ("#000000FF", "#FFFFFFFF"),
-    ("#00A4CCFF", "#F95700FF"),
-    ("#00203FFF", "#ADEFD1FF"),
-    ("#606060FF", "#D6ED17FF"),
-    ("#ED2B33FF", "#D85A7FFF"),
-    ("#2C5F2D", "#97BC62FF"),
-    ("#00539CFF", "#EEA47FFF"),
-    ("#0063B2FF", "#9CC3D5FF"),
-    ("#D198C5FF", "#E0C568FF"),
-    ("#101820FF", "#FEE715FF"),
-    ("#CBCE91FF", "#EA738DFF"),
-    ("#B1624EFF", "#5CC8D7FF"),
-    ("#89ABE3FF", "#FCF6F5FF"),
-    ("#E3CD81FF", "#B1B3B3FF"),
-    ("#101820FF", "#F2AA4CFF"),
-    ("#A07855FF", "#D4B996FF"),
-    ("#195190FF", "#A2A2A1FF"),
-    ("#603F83FF", "#C7D3D4FF"),
-    ("#2BAE66FF", "#FCF6F5FF"),
-    ("#FAD0C9FF", "#6E6E6DFF"),
-    ("#2D2926FF", "#E94B3CFF"),
-    ("#DAA03DFF", "#616247FF"),
-    ("#990011FF", "#FCF6F5FF"),
-    ("#435E55FF", "#D64161FF"),
-    ("#CBCE91FF", "#76528BFF"),
-    ("#FAEBEFFF", "#333D79FF"),
-    ("#F93822FF", "#FDD20EFF"),
-    ("#F2EDD7FF", "#755139FF"),
-    ("#006B38FF", "#101820FF"),
-    ("#F95700FF", "#FFFFFFFF"),
-    ("#FFD662FF", "#00539CFF"),
-    ("#D7C49EFF", "#343148FF"),
-    ("#FFA177FF", "#F5C7B8FF"),
-    ("#DF6589FF", "#3C1053FF"),
-    ("#FFE77AFF", "#2C5F2DFF"),
-    ("#DD4132FF", "#9E1030FF"),
-    ("#F1F4FFFF", "#A2A2A1FF"),
-    ("#FCF951FF", "#422057FF"),
-    ("#4B878BFF", "#D01C1FFF"),
-    ("#1C1C1BFF", "#CE4A7EFF"),
-    ("#00B1D2FF", "#FDDB27FF"),
-    ("#79C000FF", "#FF7F41FF"),
-    ("#BD7F37FF", "#A13941FF"),
-    ("#E3C9CEFF", "#9FC131FF"),
-    ("#00239CFF", "#E10600FF"),
-)
+from wedding import common, messages
 
 
 class Stage:
-    def __init__(self, server, users, round):
+    def __init__(
+        self, server, users, round,  # pylint: disable=redefined-builtin
+    ):
         self.server = server
         self.users = set(users)
         self.round = round
@@ -69,62 +19,46 @@ class Stage:
         code = await self.server.pg_conn.fetchval(
             'SELECT code FROM public."Image" WHERE code = $1;', message.code
         )
-
-        if message.code == 9999:
-            self.server.reset()
-            await self.server.next_stage()
-            await self.server.send_many(messages.Reset(), self.users)
-        elif not code:
-            await self.server.send(user, messages.AuthCodeInvalid())
-            await self.on_auth_code_invalid(user, message)
-        else:
+        if code:
             user.code = code
             await self.server.send(user, messages.AuthCodeOk())
-            await self.on_auth_code_ok(user, message)
+        else:
+            await self.server.send(user, messages.AuthCodeInvalid())
+
+    async def on_disconnect(self, user):
+        pass
 
     async def on_connect(self, user):
         await self.server.send(user, messages.ShowAuthCode())
 
-    async def on_auth_code_ok(self, user, message):
-        pass
-
-    async def on_auth_code_invalid(self, user, message):
-        pass
-
     async def on_question_answers(self, user, message):
-        user.age = message.age
+        user.age = int(message.age)
         user.name = message.name.strip().lower()
         await self.on_questions_answered(user, message)
 
     async def on_questions_answered(self, user, message):
         pass
 
+    async def on_code(self, user, message):
+        pass
+
 
 class Init(Stage):
     def __init__(self):
-        self.users = set()
+        super().__init__(None, set(), None)
 
 
 class Teaser(Stage):
-    async def start(self):
-        self.connections = set()
-
-    async def on_auth_code_invalid(self, user, message):
-        if message.code == 9998:
-            await self.server.send_many(messages.ShowAuthCode(), self.connections)
-            await self.server.next_stage()
-
     async def on_connect(self, user):
-        self.connections.add(user)
         await self.server.send(user, messages.ShowTeaser())
-
-    async def on_disconnect(self, user):
-        self.connections.discard(user)
 
 
 class CountingDown(Stage):
-    async def start(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.count = 5
+
+    async def start(self):
         asyncio.create_task(self.count_down())
 
     async def on_disconnect(self, user):
@@ -161,44 +95,26 @@ class Success(Stage):
 
 class TellAboutYourself(Stage):
     async def start(self):
-        self.users_to_answer = set(self.users)
-        self.users_answered = set()
+        await self.server.send_many(messages.ShowAuthCode(), self.server.connections)
+
+    async def on_connect(self, user):
+        await self.server.send(user, messages.ShowAuthCode())
 
     async def on_disconnect(self, user):
         self.users.discard(user)
-        self.users_to_answer.discard(user)
-        self.users_answered.discard(user)
         await self.send_lobby_count()
-
-    async def on_auth_code_ok(self, user, message):
-        self.users.add(user)
-        self.users_to_answer.add(user)
-        await self.send_lobby_count()
-
-    async def on_auth_code_invalid(self, user, message):
-        if message.code == 9998:
-            await self.server.next_stage()
 
     async def on_questions_answered(self, user, message):
-        self.users_to_answer.discard(user)
-        self.users_answered.add(user)
+        self.users.add(user)
         await self.send_lobby_count()
 
     async def send_lobby_count(self):
         await self.server.send_many(
             messages.LobbyCount(
-                connected=len(self.users), done=len(self.users_answered),
+                connected=len(self.server.connections), done=len(self.users),
             ),
-            self.users_answered,
+            self.users,
         )
-
-
-def fair_random_generator(items):
-    for i in range(2):
-        for item in items:
-            yield item
-    while True:
-        yield random.choice(items)
 
 
 class Group:
@@ -243,7 +159,7 @@ class GroupManager:
     def __init__(self, groups):
         self._groups = list(groups)
         self._user_group_mapping = {}
-        self._random_group_generator = fair_random_generator(self._groups)
+        self._random_group_generator = common.fair_random_generator(self._groups)
 
     def all(self):
         return [g for g in self._groups if not g.empty]
@@ -261,23 +177,30 @@ class GroupManager:
         return self._user_group_mapping.get(user)
 
     def remove_user(self, user):
-        group = self._user_group_mapping.get(user)
-        if group:
+        if group := self._user_group_mapping.get(user):
             group.remove(user)
             self._user_group_mapping.pop(user)
 
 
 class GroupGame(Stage):
-    async def start(self):
-        self.groups = GroupManager(Group(color) for color in random.sample(COLORS, 2))
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.groups = None
 
-        send_tasks = []
+    async def start(self):
+        self.groups = await self.create_groups()
+
+        tasks = []
         for user in self.users:
             group = self.groups.add_user_to_random_group(user)
-            send_tasks.append(
-                self.server.send(user, self.show_message(color=group.name))
+            tasks.append((user, group.name))
+
+        await asyncio.gather(
+            *(
+                self.server.send(user, self.show_message(color=group_name))
+                for user, group_name in tasks
             )
-        await asyncio.gather(*send_tasks)
+        )
 
     async def on_questions_answered(self, user, message):
         self.users.add(user)
@@ -313,60 +236,113 @@ class GroupGame(Stage):
                         messages.TeamProgress(n_users, n_done_users), done_users
                     )
 
+    def show_message(self, color):
+        raise NotImplementedError()
+
+    async def create_groups(self):
+        raise NotImplementedError()
+
 
 class NameOrder(GroupGame):
-    show_message = messages.ShowNameOrder
+    async def create_groups(self):
+        return GroupManager(Group(color) for color in random.sample(common.COLORS, 2))
 
-    async def on_name_order(self, user, message):
-        # Get the codes of the users coming after the current user when ordered
-        # alphabetically. Users with the same name will both be accepted. The
-        # last user can enter 0.
+    async def on_code(self, user, message):
+        await super().on_code(user, message)
+
         group = self.groups.get_group_by_user(user)
-        users = (u for u in group.users() if u.name > user.name)
-        users = sorted(users, key=lambda u: u.name)
-        oks = set()
-        if not users:
-            oks.add(0)
-        else:
-            next_user = users[0]
-            oks.add(next_user.code)
-            for user in users[1:]:
-                if user.name != next_user.name:
-                    break
-                oks.add(user.code)
 
-        # Check if user gussed correctly:
-        if message.code in oks:
-            # Code guessed correctly
+        # Get the other users in the group that come after the current user
+        # when users are sorted by name
+        users_after = (u for u in group.users() if u.name > user.name)
+        users_after = sorted(users_after, key=lambda u: u.name)
+
+        # Get the code of the next user in the list, and all following users
+        # that might have the same name.
+        acceptable_codes = {
+            u.code for u in users_after if u.name == users_after[0].name
+        }
+
+        # If no codes have been found, it's the last user in the list and 0 is
+        # considered as an acceptable answer
+        if not acceptable_codes:
+            acceptable_codes.add("0")
+
+        if message.code in acceptable_codes:
             group.mark_done(user)
             await self.check_group_progress()
         else:
             await self.server.send(user, messages.NameOrderInvalid())
 
+    def show_message(self, color):
+        return messages.ShowNameOrder(color)
+
 
 class TotalAge(GroupGame):
-    show_message = messages.ShowTotalAge
+    async def create_groups(self):
+        return GroupManager(Group(color) for color in random.sample(common.COLORS, 2))
 
-    async def on_total_age(self, user, message):
+    async def on_code(self, user, message):
+        await super().on_code(user, message)
         group = self.groups.get_group_by_user(user)
+        answer = common.parse_int(message.code)
 
-        if message.code == sum(u.age for u in group.users()):
-            # Code guessed correctly
+        if answer == sum(u.age for u in group.users()):
             group.mark_all_done()
             await self.check_group_progress()
         else:
             await self.server.send(user, messages.TotalAgeInvalid())
 
+    def show_message(self, color):
+        return messages.ShowTotalAge(color)
+
 
 class FindingGroup(GroupGame):
-    show_message = messages.ShowCountCode
+    async def create_groups(self):
+        return GroupManager(Group(color) for color in random.sample(common.COLORS, 2))
 
-    async def on_count_code(self, user, message):
+    async def on_code(self, user, message):
+        await super().on_code(user, message)
         group = self.groups.get_group_by_user(user)
+        answer = common.parse_int(message.code)
 
-        if message.code == len(group.users()):
-            # Code guessed correctly
+        if answer == len(group.users()):
             group.mark_all_done()
             await self.check_group_progress()
         else:
             await self.server.send(user, messages.CountCodeInvalid())
+
+    def show_message(self, color):
+        return messages.ShowCountCode(color)
+
+
+class SlowDance(GroupGame):
+    async def create_groups(self):
+        return GroupManager(Group(color) for color in random.sample(common.COLORS, 1))
+
+    async def on_code(self, user, message):
+        await super().on_code(user, message)
+        group = self.groups.get_group_by_user(user)
+
+        other_user = next((u for u in group.users() if u != user), None)
+
+        if other_user and other_user.code == message.code:
+            group.mark_all_done()
+            await self.check_group_progress()
+        else:
+            await self.server.send(user, messages.SlowDanceCodeInvalid())
+
+    def show_message(self, color):
+        return messages.ShowSlowDance(color)
+
+
+class TheEnd(Stage):
+    async def start(self):
+        await self.server.send_many(messages.ShowTheEnd(), self.users)
+
+    async def on_disconnect(self, user):
+        self.users.discard(user)
+
+    async def on_questions_answered(self, user, message):
+        self.users.add(user)
+        await self.server.send(user, messages.ShowTheEnd())
