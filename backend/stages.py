@@ -267,7 +267,7 @@ class GroupManager:
             self._user_group_mapping.pop(user)
 
 
-class BaseAwesome(Stage):
+class GroupGame(Stage):
     async def start(self):
         self.groups = GroupManager(Group(color) for color in random.sample(COLORS, 2))
 
@@ -314,7 +314,7 @@ class BaseAwesome(Stage):
                     )
 
 
-class NameOrder(BaseAwesome):
+class NameOrder(GroupGame):
     show_message = messages.ShowNameOrder
 
     async def on_name_order(self, user, message):
@@ -344,7 +344,7 @@ class NameOrder(BaseAwesome):
             await self.server.send(user, messages.NameOrderInvalid())
 
 
-class TotalAge(BaseAwesome):
+class TotalAge(GroupGame):
     show_message = messages.ShowTotalAge
 
     async def on_total_age(self, user, message):
@@ -358,7 +358,7 @@ class TotalAge(BaseAwesome):
             await self.server.send(user, messages.TotalAgeInvalid())
 
 
-class FindingGroup(BaseAwesome):
+class FindingGroup(GroupGame):
     show_message = messages.ShowCountCode
 
     async def on_count_code(self, user, message):
