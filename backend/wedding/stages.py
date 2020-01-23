@@ -1,7 +1,11 @@
 import asyncio
+import logging
 import random
 
 from wedding import common, messages
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Stage:
@@ -169,9 +173,12 @@ class GroupManager:
 
     def add_user_to_random_group(self, user):
         group = next(self._random_group_generator)
+        self.add_user_to_group(user, group)
+        return group
+
+    def add_user_to_group(self, user, group):
         self._user_group_mapping[user] = group
         group.add(user)
-        return group
 
     def get_group_by_user(self, user):
         return self._user_group_mapping.get(user)
@@ -187,12 +194,15 @@ class GroupGame(Stage):
         super().__init__(*args, **kwargs)
         self.groups = None
 
+    def assign_user_to_group(self, user):
+        return self.groups.add_user_to_random_group(user)
+
     async def start(self):
         self.groups = await self.create_groups()
 
         tasks = []
         for user in self.users:
-            group = self.groups.add_user_to_random_group(user)
+            group = self.assign_user_to_group(user)
             tasks.append((user, group.name))
 
         await asyncio.gather(
@@ -204,7 +214,7 @@ class GroupGame(Stage):
 
     async def on_questions_answered(self, user, message):
         self.users.add(user)
-        group = self.groups.add_user_to_random_group(user)
+        group = self.assign_user_to_group(user)
         await self.server.send(user, self.show_message(color=group.name))
         await self.check_group_progress()
 
@@ -318,7 +328,42 @@ class FindingGroup(GroupGame):
 
 class SlowDance(GroupGame):
     async def create_groups(self):
-        return GroupManager(Group(color) for color in random.sample(common.COLORS, 1))
+        color_gen = iter(common.COLORS)
+
+        rows = await self.server.pg_conn.fetch(
+            """
+            SELECT
+                code, other
+            FROM
+                public."Image"
+        """
+        )
+        pairs = set()
+        for row in rows:
+            if not row["code"] or not row["other"]:
+                continue  # Will be put in a "loners" group
+            pair = (row["code"], row["other"])
+            pair = tuple(sorted(pair))
+            pairs.add(pair)
+
+        LOGGER.info(len(pairs))
+
+        self.loner_group = Group(next(color_gen))
+        self.code_to_group_map = {}
+        groups = [self.loner_group]
+        for pair in pairs:
+            color = next(color_gen)
+            group = Group(color)
+            self.code_to_group_map[pair[0]] = group
+            self.code_to_group_map[pair[1]] = group
+            groups.append(group)
+
+        return GroupManager(groups)
+
+    def assign_user_to_group(self, user):
+        group = self.code_to_group_map.get(user.code, self.loner_group)
+        self.groups.add_user_to_group(user, group)
+        return group
 
     async def on_code(self, user, message):
         await super().on_code(user, message)

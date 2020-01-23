@@ -95,6 +95,22 @@
         return false;
     };
 
+    function setColors(id, colors) {
+        var element = $("#" + id);
+        var background =
+            "repeating-linear-gradient(45deg, " +
+            colors[0] +
+            ", " +
+            colors[0] +
+            " 33%, " +
+            colors[1] +
+            " 33%, " +
+            colors[1] +
+            " 67%)";
+        element.style.background = background;
+        element.style.color = colors[3];
+    }
+
     ws.onmessage = function(event) {
         console.log(event);
         var data = JSON.parse(event.data);
@@ -120,8 +136,7 @@
             showPage("countdown");
             window.navigator.vibrate(200);
         } else if (type == "show-count-code") {
-            $("#count-code").style.background = data["color"][0];
-            $("#count-code").style.color = data["color"][1];
+            setColors("count-code", data["color"]);
             showPage("count-code");
         } else if (type == "count-code-invalid") {
             $("#count-code input").classList.add("is-invalid");
@@ -135,22 +150,19 @@
             $("#success .round-next").innerText = data["round"] + 1;
             showPage("success");
         } else if (type == "show-total-age") {
-            $("#total-age").style.background = data["color"][0];
-            $("#total-age").style.color = data["color"][1];
+            setColors("total-age", data["color"]);
             showPage("total-age");
         } else if (type == "total-age-invalid") {
             $("#total-age input").classList.add("is-invalid");
             showPage("total-age");
         } else if (type == "show-name-order") {
-            $("#name-order").style.background = data["color"][0];
-            $("#name-order").style.color = data["color"][1];
+            setColors("name-order", data["color"]);
             showPage("name-order");
         } else if (type == "name-order-invalid") {
             $("#name-order input").classList.add("is-invalid");
             showPage("name-order");
         } else if (type == "show-slow-dance") {
-            $("#slow-dance").style.background = data["color"][0];
-            $("#slow-dance").style.color = data["color"][1];
+            setColors("slow-dance", data["color"]);
             showPage("slow-dance");
         } else if (type == "slow-dance-code-invalid") {
             $("#slow-dance input").classList.add("is-invalid");
