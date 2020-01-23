@@ -98,7 +98,7 @@
     function setColors(id, colors) {
         var element = $("#" + id);
         var background =
-            "repeating-linear-gradient(45deg, " +
+            "repeating-linear-gradient(30deg, " +
             colors[0] +
             ", " +
             colors[0] +

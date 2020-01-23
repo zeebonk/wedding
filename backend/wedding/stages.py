@@ -20,9 +20,10 @@ class Stage:
         pass
 
     async def on_auth_code(self, user, message):
-        code = await self.server.pg_conn.fetchval(
-            'SELECT code FROM public."Image" WHERE code = $1;', message.code
-        )
+        async with self.server.pg_pool.acquire() as conn:
+            code = await conn.fetchval(
+                'SELECT code FROM public."Image" WHERE code = $1;', message.code
+            )
         if code:
             user.code = code
             await self.server.send(user, messages.AuthCodeOk())
@@ -290,7 +291,7 @@ class NameOrder(GroupGame):
 
 class TotalAge(GroupGame):
     async def create_groups(self):
-        return GroupManager(Group(color) for color in random.sample(common.COLORS, 2))
+        return GroupManager(Group(color) for color in random.sample(common.COLORS, 8))
 
     async def on_code(self, user, message):
         await super().on_code(user, message)
@@ -309,7 +310,7 @@ class TotalAge(GroupGame):
 
 class FindingGroup(GroupGame):
     async def create_groups(self):
-        return GroupManager(Group(color) for color in random.sample(common.COLORS, 2))
+        return GroupManager(Group(color) for color in random.sample(common.COLORS, 12))
 
     async def on_code(self, user, message):
         await super().on_code(user, message)
@@ -328,34 +329,32 @@ class FindingGroup(GroupGame):
 
 class SlowDance(GroupGame):
     async def create_groups(self):
-        color_gen = iter(common.COLORS)
-
-        rows = await self.server.pg_conn.fetch(
-            """
-            SELECT
-                code, other
-            FROM
-                public."Image"
-        """
-        )
-        pairs = set()
-        for row in rows:
-            if not row["code"] or not row["other"]:
+        async with self.server.pg_pool.acquire() as conn:
+            raw_pairs = await conn.fetch(
+                """
+                SELECT
+                    code AS code_a,
+                    other AS code_b
+                FROM
+                    public."Image"
+                """
+            )
+        active_codes = set(u.code for u in self.users)
+        active_pairs = set()
+        for code_a, code_b in raw_pairs:
+            if code_a not in active_codes or code_b not in active_codes:
                 continue  # Will be put in a "loners" group
-            pair = (row["code"], row["other"])
-            pair = tuple(sorted(pair))
-            pairs.add(pair)
+            pair = tuple(sorted((code_a, code_b)))
+            active_pairs.add(pair)
 
-        LOGGER.info(len(pairs))
-
+        color_gen = iter(common.COLORS)
         self.loner_group = Group(next(color_gen))
         self.code_to_group_map = {}
         groups = [self.loner_group]
-        for pair in pairs:
-            color = next(color_gen)
-            group = Group(color)
-            self.code_to_group_map[pair[0]] = group
-            self.code_to_group_map[pair[1]] = group
+        for code_a, code_b in active_pairs:
+            group = Group(next(color_gen))
+            self.code_to_group_map[code_a] = group
+            self.code_to_group_map[code_b] = group
             groups.append(group)
 
         return GroupManager(groups)
@@ -369,10 +368,10 @@ class SlowDance(GroupGame):
         await super().on_code(user, message)
         group = self.groups.get_group_by_user(user)
 
-        other_user = next((u for u in group.users() if u != user), None)
+        other_codes = set(u.code for u in group.users() if u != user)
 
-        if other_user and other_user.code == message.code:
-            group.mark_all_done()
+        if message.code in other_codes:
+            group.mark_done(user)
             await self.check_group_progress()
         else:
             await self.server.send(user, messages.SlowDanceCodeInvalid())

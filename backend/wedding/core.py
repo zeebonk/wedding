@@ -27,8 +27,8 @@ class User:
 
 
 class Server:
-    def __init__(self, pg_conn, next_stage_code, reset_code):
-        self.pg_conn = pg_conn
+    def __init__(self, pg_pool, next_stage_code, reset_code):
+        self.pg_pool = pg_pool
         self.next_stage_code = next_stage_code
         self.reset_code = reset_code
         self.stage = None

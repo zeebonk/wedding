@@ -32,17 +32,17 @@ async def main():
     }
     if cadata := os.getenv("PG_CADATA"):
         pg_params["ssl"] = ssl.create_default_context(cadata=cadata)
-    pg_conn = await asyncpg.connect(**pg_params)
+    pg_pool = await asyncpg.create_pool(**pg_params)
 
     LOGGER.info("Starting websocket server")
 
     server = Server(
-        pg_conn,
+        pg_pool,
         next_stage_code=os.getenv("NEXT_STAGE_CODE"),
         reset_code=os.getenv("RESET_CODE"),
     )
     await server.next_stage()
-    await websockets.serve(server.serve, "0.0.0.0", 8000)
+    await websockets.serve(server.serve, "0.0.0.0", 8000, max_queue=None)
 
     LOGGER.info("Ready to go")
 
