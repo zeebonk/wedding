@@ -24,11 +24,17 @@ class Stage:
             code = await conn.fetchval(
                 'SELECT code FROM public."Image" WHERE code = $1;', message.code
             )
-        if code:
+        if code and code not in self.server.used_codes:
+            self.server.used_codes.discard(user.code)
             user.code = code
+            self.server.used_codes.add(code)
             await self.server.send(user, messages.AuthCodeOk())
         else:
             await self.server.send(user, messages.AuthCodeInvalid())
+
+    async def _on_disconnect(self, user):
+        self.server.used_codes.discard(user.code)
+        await self.on_disconnect(user)
 
     async def on_disconnect(self, user):
         pass

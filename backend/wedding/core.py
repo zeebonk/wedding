@@ -17,9 +17,9 @@ class User:
     id: str
     socket: typing.Any = dataclasses.field(compare=False, repr=False)
 
-    name: str = dataclasses.field(init=False, compare=False, repr=False)
-    age: int = dataclasses.field(init=False, compare=False, repr=False)
-    code: int = dataclasses.field(init=False, compare=False, repr=False)
+    name: str = dataclasses.field(init=False, compare=False, repr=False, default=None)
+    age: int = dataclasses.field(init=False, compare=False, repr=False, default=None)
+    code: int = dataclasses.field(init=False, compare=False, repr=False, default=None)
 
     group: typing.Any = dataclasses.field(
         init=False, compare=False, repr=False, default=None
@@ -35,6 +35,7 @@ class Server:
         self.round = 0
         self.connections = set()
         self.reset()
+        self.used_codes = set()
 
     def reset(self):
         self.stage = stages.Init()
@@ -90,7 +91,7 @@ class Server:
             ) as e:
                 LOGGER.info("%s closed connection (%s)", user, e)
                 self.connections.discard(user)
-                await self.stage.on_disconnect(user)
+                await self.stage._on_disconnect(user)
                 break
 
             message = messages.deserialize(data)
