@@ -268,16 +268,16 @@ class NameOrder(GroupGame):
         users_after = (u for u in group.users() if u.name > user.name)
         users_after = sorted(users_after, key=lambda u: u.name)
 
-        # Get the code of the next user in the list, and all following users
-        # that might have the same name.
-        acceptable_codes = {
-            u.code for u in users_after if u.name == users_after[0].name
-        }
-
-        # If no codes have been found, it's the last user in the list and 0 is
-        # considered as an acceptable answer
-        if not acceptable_codes:
-            acceptable_codes.add("0")
+        if users_after:
+            # Get the code of the next user in the list, and all following users
+            # that might have the same name.
+            acceptable_codes = {
+                u.code for u in users_after if u.name == users_after[0].name
+            }
+        else:
+            # If no codes have been found, it's the last user in the list and 0 is
+            # considered as an acceptable answer
+            acceptable_codes = {"0"}
 
         if message.code in acceptable_codes:
             group.mark_done(user)
