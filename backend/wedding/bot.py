@@ -95,7 +95,7 @@ async def hello():
                     raise NotImplementedError(str(message))
 
             if mode == "guess_code":
-                await websocket.send(messages.serialize(messages.AuthCode("azym")))
+                await websocket.send(messages.serialize(messages.AuthCode(random.choice(codes))))
 
             elif mode == "answer_questions":
                 await websocket.send(
