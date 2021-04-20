@@ -10,7 +10,7 @@ ipython = "*"
 pylint = "*"
 
 [packages]
-asyncpg = "==0.20.1"
+asyncpg = "==0.21.0"
 websockets = "==8.1"
 coolname = "==1.1.0"
 
