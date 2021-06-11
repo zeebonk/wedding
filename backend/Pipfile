@@ -11,7 +11,7 @@ pylint = "*"
 
 [packages]
 asyncpg = "==0.20.1"
-websockets = "==8.1"
+websockets = "==9.1"
 coolname = "==1.1.0"
 
 [requires]
